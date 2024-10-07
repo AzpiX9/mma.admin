@@ -16,7 +16,7 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClass = 'org.helmo.intelligent_thermometer.App'
+    mainClass = 'org.helmo.example.app.Program'
 }
 
 tasks.register('aggregatePmdReports', AggregatePmdReportsTask) {
