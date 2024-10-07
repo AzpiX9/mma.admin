@@ -1,0 +1,9 @@
+plugins {
+     id 'helmo-common-conventions'
+     
+     id 'java-library'
+}
+
+dependencies {
+     testImplementation 'org.mockito:mockito-core:5.5.0'
+}

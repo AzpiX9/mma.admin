@@ -1,0 +1,9 @@
+plugins {
+     id 'helmo-common-conventions'
+     
+     id 'java-library'
+}
+
+dependencies {
+     implementation project(':presentations')
+}

@@ -1,0 +1,43 @@
+plugins {
+    id 'helmo-common-conventions'
+    id 'jacoco-report-aggregation'
+    id 'application'
+}
+
+dependencies {
+    implementation project(':presentations')
+    implementation project(':infrastructures')
+    implementation project(':views')
+    implementation project(':domains')
+
+    // use to read args
+    testImplementation 'com.tngtech.archunit:archunit-junit5:1.1.0'
+}
+
+application {
+    // Define the main class for the application.
+    mainClass = 'org.helmo.intelligent_thermometer.App'
+}
+
+tasks.register('aggregatePmdReports', AggregatePmdReportsTask) {
+    projectsFiles = files(
+            '../domains/build/reports/pmd/main.xml',
+            '../presentations/build/reports/pmd/main.xml',
+            '../infrastructures/build/reports/pmd/main.xml',
+            '../views/build/reports/pmd/main.xml'
+    )
+
+    reportFile = file('build/reports/pmd/agregatedPmdViolations.html')
+
+    dependsOn(':domains:build',':presentations:build',':infrastructures:build',':views:build')
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('testCodeCoverageReport', JacocoReport)
+    dependsOn tasks.named('aggregatePmdReports', AggregatePmdReportsTask)
+}
+
+tasks.named('run') {
+    standardInput = System.in
+}
+

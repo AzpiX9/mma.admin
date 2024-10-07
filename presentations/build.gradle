@@ -1,0 +1,11 @@
+plugins {
+     id 'helmo-common-conventions'
+     
+     id 'java-library'
+}
+
+dependencies {
+     implementation project(':domains')
+     
+     testImplementation 'org.mockito:mockito-core'
+}
