@@ -3,12 +3,52 @@
  */
 package org.helmo.example.app;
 
+import joptsimple.OptionParser;
+import org.helmo.example.infrastructures.RoomFileRepository;
+import org.helmo.example.presentations.MainPresenter;
+import org.helmo.example.views.CLIView;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 public class Program {
-    public String getGreeting() {
-        return "Hello World!";
-    }
 
     public static void main(String[] args) {
-        System.out.println(new Program().getGreeting());
+        if(!validGivenArgs(args)){
+            return;
+        }
+
+        var roomRepository = new RoomFileRepository("C:\\temp\\calendars\\rooms.csv");
+        var mainPresenter = new MainPresenter(roomRepository);
+        var view = new CLIView(System.in,System.out,mainPresenter);
+
+
+        view.run();
+
+
+
+
+    }
+
+    private static boolean validGivenArgs(String[] args) {
+        if(args.length < 1) {
+            System.err.println("Argument requis dir manquant ou incorrect");
+            return false;
+        }
+
+        if(args.length > 1) {
+            System.err.println("Trop arguments donné");
+            return false;
+        }
+
+        OptionParser parser = new OptionParser();
+
+        parser.accepts("dir").withRequiredArg();
+
+        var arg = args[0].split("=");
+        var opts = parser.parse(arg);
+        System.out.println(opts.valueOf("dir"));
+
+        return opts.has("dir") && Files.exists(Paths.get((String) opts.valueOf("dir"),"rooms.csv"));
     }
 }
