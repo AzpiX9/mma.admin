@@ -1,9 +1,10 @@
-package org.helmo.example.presentations;
+package org.helmo.mma.admin.presentations;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public interface MainView {
-    void seeReservationsFor(LocalDateTime dateTimeGiven);
+    void seeReservationsFor(LocalDate dateGiven);
 
     void bookLocal(String idLocal, String matricule, LocalDateTime localDate );
 

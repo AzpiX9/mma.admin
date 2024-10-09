@@ -1,10 +1,10 @@
 /*
  * This source file is an example
  */
-package org.helmo.example.infrastructures;
+package org.helmo.mma.admin.infrastructures;
 
-import org.helmo.example.domains.core.Room;
-import org.helmo.example.domains.rooms.CanReadRooms;
+import org.helmo.mma.admin.domains.core.Room;
+import org.helmo.mma.admin.domains.rooms.CanReadRooms;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -14,7 +14,7 @@ import java.util.List;
 
 public class RoomFileRepository implements CanReadRooms {
 
-    private String filePath;
+    private final String filePath;
 
     public RoomFileRepository(String path) {
         filePath = path;

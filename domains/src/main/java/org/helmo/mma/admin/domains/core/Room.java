@@ -1,4 +1,4 @@
-package org.helmo.example.domains.core;
+package org.helmo.mma.admin.domains.core;
 
 public record Room(String Id, String Name, int size) {
 }

@@ -10,13 +10,15 @@ dependencies {
     implementation project(':views')
     implementation project(':domains')
 
+    implementation 'net.sf.jopt-simple:jopt-simple:4.7'
+
     // use to read args
     testImplementation 'com.tngtech.archunit:archunit-junit5:1.1.0'
 }
 
 application {
     // Define the main class for the application.
-    mainClass = 'org.helmo.example.app.Program'
+    mainClass = 'org.helmo.mma.admin.app.Program'
 }
 
 tasks.register('aggregatePmdReports', AggregatePmdReportsTask) {
