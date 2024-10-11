@@ -3,6 +3,7 @@
  */
 package org.helmo.mma.admin.presentations;
 
+import org.helmo.mma.admin.domains.core.BookingAggregator;
 import org.helmo.mma.admin.domains.rooms.CanReadRooms;
 
 import java.time.LocalDate;
@@ -10,10 +11,10 @@ import java.time.LocalDate;
 public class MainPresenter implements BookingPresenter {
 
     private MainView view;
-    private CanReadRooms canReadRooms;
+    private BookingAggregator aggregator;
 
-    public MainPresenter(CanReadRooms roomRepository) {
-        canReadRooms = roomRepository;
+    public MainPresenter(BookingAggregator aggregator) {
+        this.aggregator = aggregator;
     }
 
     @Override
@@ -24,6 +25,7 @@ public class MainPresenter implements BookingPresenter {
 
     @Override
     public void seeBookingRequest(LocalDate date) {
+        CanReadRooms canReadRooms = aggregator.getRoomsRepo();
         for (var room : canReadRooms.getRooms()) {
             System.out.println(room.Id());
         }

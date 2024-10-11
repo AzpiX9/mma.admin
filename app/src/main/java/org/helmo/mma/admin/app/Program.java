@@ -4,7 +4,11 @@
 package org.helmo.mma.admin.app;
 
 import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import org.helmo.mma.admin.domains.core.BookingAggregator;
+import org.helmo.mma.admin.infrastructures.ICALViewer;
 import org.helmo.mma.admin.infrastructures.RoomFileRepository;
+import org.helmo.mma.admin.infrastructures.UserFileRepository;
 import org.helmo.mma.admin.presentations.MainPresenter;
 import org.helmo.mma.admin.views.CLIView;
 
@@ -12,20 +16,32 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class Program {
+    private static String path = "";
 
     public static void main(String[] args) {
         if(!validGivenArgs(args)){
             return;
         }
 
-        var roomRepository = new RoomFileRepository("C:\\temp\\calendars\\rooms.csv");
-        var mainPresenter = new MainPresenter(roomRepository);
+        // Agrégateur pour les repos ?
+        var roomRepository = new RoomFileRepository(path+"\\rooms.csv");
+        var userRepository = new UserFileRepository(path+"\\users.csv");
+        var calendarRepository = new ICALViewer(path);
+        //agréger les repos dans le presenter
+        var aggregator = new BookingAggregator(roomRepository, userRepository, calendarRepository);
+
+        var mainPresenter = new MainPresenter(aggregator);
         var view = new CLIView(System.in,System.out,mainPresenter);
 
         view.run();
 
     }
 
+    /**
+     * Vérifie si les arguments reçus sont valide
+     * @param args
+     * @return true si l'argument reçu correspond à un chemin existant et que les 2 fichiers existent sinon false
+     */
     private static boolean validGivenArgs(String[] args) {
         if(args.length < 1) {
             System.err.println("Argument requis dir manquant ou incorrect");
@@ -37,12 +53,18 @@ public class Program {
             return false;
         }
 
+        var opts = parsingOpts(args);
+        return opts.has("dir")
+                && Files.exists(Paths.get(path,"rooms.csv"))
+                && Files.exists(Paths.get(path,"users.csv"));
+    }
+
+    private static OptionSet parsingOpts(String[] args) {
         OptionParser parser = new OptionParser();
         parser.accepts("dir").withRequiredArg();
         var arg = args[0].split("=");
-
         var opts = parser.parse(arg);
-
-        return opts.has("dir") && Files.exists(Paths.get((String) opts.valueOf("dir"),"rooms.csv"));
+        path = opts.valueOf("dir").toString();
+        return opts;
     }
 }

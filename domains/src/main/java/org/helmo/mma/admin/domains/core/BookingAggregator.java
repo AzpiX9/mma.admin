@@ -19,5 +19,15 @@ public class BookingAggregator {
         this.roomsRepo = Objects.requireNonNull(roomRepo);
     }
 
+    public CalendarRepository getCalendarRepository() {
+        return calendarRepository;
+    }
 
+    public CanReadRooms getRoomsRepo() {
+        return roomsRepo;
+    }
+
+    public CanReadUsers getUsersRepo() {
+        return usersRepo;
+    }
 }
