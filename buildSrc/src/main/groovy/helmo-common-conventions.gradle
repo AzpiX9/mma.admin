@@ -13,15 +13,16 @@ repositories {
 dependencies {
     // Define dependency versions as constraints
     constraints {
-        testImplementation 'org.mockito:mockito-core:5.5.0'
+        testImplementation 'org.mockito:mockito-core:5.13.0'
     }
 
-    implementation 'org.apache.logging.log4j:log4j-core:2.20.0'
+    implementation 'org.apache.logging.log4j:log4j-core:2.24.1'
 
     implementation 'org.apache.commons:commons-text:1.10.0'
 
     // Use JUnit Jupiter for testing.
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.+'
+    testImplementation 'org.assertj:assertj-core:3.20.2'
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
@@ -38,7 +39,9 @@ java {
 }
 
 pmd {
-    ruleSetFiles = files("config/pmd/b2-ruleset.xml") //TODO : ajoutez ce fichier dans le projet app
+    ruleSetFiles = files("config/pmd/ue36-ruleset.xml")
+    consoleOutput = true
+    toolVersion = "7.5.0"
     ignoreFailures = true
 }
 
