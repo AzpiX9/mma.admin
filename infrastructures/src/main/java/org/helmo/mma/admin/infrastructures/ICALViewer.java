@@ -17,6 +17,7 @@ import org.helmo.mma.admin.domains.booking.CanWriteBooked;
 import org.helmo.mma.admin.domains.core.Booking;
 
 import java.io.*;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -58,7 +59,7 @@ public class ICALViewer implements CalendarRepository {
         UidGenerator uidGenerator = null;
         VEvent event = new VEvent(debut,fin,booking.Description());
         Organizer attendee = new Organizer();
-        attendee.add(new Cn("Adrien PRC"));
+        attendee.add(new Cn("Adrien PRC "+booking.Matricule()));
         attendee.add(new Email("a.prc@helmo.be"));
         Location salle = new Location(booking.IdSalle());
         event.add(salle);
@@ -99,5 +100,13 @@ public class ICALViewer implements CalendarRepository {
     @Override
     public List<VEvent> retrieveAll() {
         return events;
+    }
+
+    @Override
+    public Booking getBooking(String id) {
+        var reference = events.stream().filter(event -> event.getLocation().get().toString().equals(id)).findFirst().get();
+        Booking booking = null;
+        //return new Booking(reference.getLocation().get(),);
+        return booking;
     }
 }
