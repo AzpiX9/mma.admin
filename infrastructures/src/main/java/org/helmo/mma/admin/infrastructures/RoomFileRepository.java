@@ -7,11 +7,15 @@ import org.helmo.mma.admin.domains.core.Room;
 import org.helmo.mma.admin.domains.rooms.CanReadRooms;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Lecteur de fichiers CSV des salles (rooms)
+ */
 public class RoomFileRepository implements CanReadRooms {
 
     private final String filePath;
@@ -23,7 +27,7 @@ public class RoomFileRepository implements CanReadRooms {
     @Override
     public List<Room> getRooms() {
         List<Room> rooms = new ArrayList<>();
-        try(BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+        try(BufferedReader br = Files.newBufferedReader(Path.of(filePath))) {
             String line;
             while ((line = br.readLine()) != null){
                 var values = line.split(";");
@@ -36,5 +40,13 @@ public class RoomFileRepository implements CanReadRooms {
         }
 
         return rooms;
+    }
+
+    public Room getRoom(String roomId) {
+
+        return getRooms()
+                .stream()
+                .filter(room -> room.Id().equals(roomId))
+                .findFirst().orElse(new Room("-1","Backrooms",Integer.MAX_VALUE));
     }
 }
