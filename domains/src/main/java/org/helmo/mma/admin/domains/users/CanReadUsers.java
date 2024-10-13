@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 public interface CanReadUsers {
-    Map<String,User> getUsers();
+    List<User> getUsers();
 
     User getUser(String matricule);
+
+    boolean exists(String matricule);
 }
