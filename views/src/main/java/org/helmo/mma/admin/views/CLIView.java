@@ -13,6 +13,7 @@ import java.io.PrintWriter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
 public class CLIView implements MainView {
@@ -31,44 +32,22 @@ public class CLIView implements MainView {
 
     public void run(){
         while (true){
-            seeReservationsFor(currentDate);
             System.out.println("""
                     1. Changer de date
                     2. Encoder une réservation
                     3. Quitter
                     """);
             int choice = scanner.nextInt();
+            scanner.nextLine();
 
             switch (choice){
                 case 1 -> {
                     System.out.println("Entrez une date ");
-                    String date = scanner.next();
+                    String date = scanner.nextLine();
                     currentDate = LocalDate.parse(date);
                 }
                 case 2 -> {
-                    System.out.println("Id salle : ");
-                    String salleId = scanner.next();
-
-                    System.out.println("Matricule : ");
-                    String matricule = scanner.next();
-
-                    System.out.println("Jour : ");
-                    String day = scanner.next();
-                    LocalDate jour = LocalDate.parse(day);
-
-                    System.out.println("Heure début : ");
-                    String heureB = scanner.next();
-                    LocalTime debut = LocalTime.parse(heureB);
-
-                    System.out.println("Heure fin : ");
-                    String heureF = scanner.next();
-                    LocalTime fin = LocalTime.parse(heureF);
-
-                    System.out.println("Description : ");
-                    String description = scanner.next();
-
-                    System.out.println("Nombre de personnes : ");
-                    int nombre = scanner.nextInt();
+                    encodeNewBookedRoom();
                 }
                 case 3 -> {
                     return;
@@ -79,6 +58,43 @@ public class CLIView implements MainView {
 
         }
 
+    }
+
+    private void encodeNewBookedRoom() {
+        StringBuilder builder = new StringBuilder();
+        System.out.println("Id salle : ");
+        String salleId = scanner.nextLine();
+        builder.append(salleId);
+
+        System.out.println("Matricule : ");
+        String matricule = scanner.nextLine();
+        builder.append(", "+matricule);
+
+        System.out.println("Jour : ");
+        String day = scanner.nextLine();
+        LocalDate jour = LocalDate.parse(day);
+        builder.append(", "+jour);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+        System.out.println("Heure début : ");
+        String heureB = scanner.nextLine();
+        LocalTime debut = LocalTime.parse(heureB,formatter);
+        builder.append(", "+debut);
+
+        System.out.println("Heure fin : ");
+        String heureF = scanner.nextLine();
+        LocalTime fin = LocalTime.parse(heureF,formatter);
+        builder.append(", "+fin);
+
+        System.out.println("Description : ");
+        String description = scanner.nextLine();
+        builder.append(", "+description);
+
+        System.out.println("Nombre de personnes : ");
+        int nombre = scanner.nextInt();
+        builder.append(", "+nombre);
+
+        presenter.handleRequest(builder.toString());
     }
 
     @Override
@@ -96,9 +112,9 @@ public class CLIView implements MainView {
 
     }
 
-    @Override
-    public void bookLocal(String idLocal, String matricule, LocalDateTime localDate) {
-        throw new NotImplementedException();
 
+    @Override
+    public void displayError(String error) {
+        System.err.println("[ERREUR] : "+error);
     }
 }

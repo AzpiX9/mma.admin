@@ -23,7 +23,6 @@ public class Program {
             return;
         }
 
-        // Agrégateur pour les repos ?
         var roomRepository = new RoomFileRepository(path+"\\rooms.csv");
         var userRepository = new UserFileRepository(path+"\\users.csv");
         var calendarRepository = new ICALViewer(path);
@@ -38,7 +37,7 @@ public class Program {
     }
 
     /**
-     * Vérifie si les arguments reçus sont valide
+     * Vérifie si les arguments reçus sont valides
      * @param args
      * @return true si l'argument reçu correspond à un chemin existant et que les 2 fichiers existent sinon false
      */
