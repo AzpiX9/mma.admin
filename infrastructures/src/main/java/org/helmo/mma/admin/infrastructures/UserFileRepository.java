@@ -1,18 +1,14 @@
 package org.helmo.mma.admin.infrastructures;
 
-import org.helmo.mma.admin.domains.core.Room;
 import org.helmo.mma.admin.domains.core.User;
 import org.helmo.mma.admin.domains.users.CanReadUsers;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class UserFileRepository implements CanReadUsers {
     private final String filePath;
