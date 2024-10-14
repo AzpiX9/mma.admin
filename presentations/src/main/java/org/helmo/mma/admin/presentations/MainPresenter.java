@@ -19,7 +19,6 @@ public class MainPresenter implements BookingPresenter {
     private CanReadUsers usersRepo;
     private CalendarRepository calendarRepository;
 
-
     public MainPresenter(BookingAggregator aggregator) {
         this.roomsRepo = aggregator.getRoomsRepo();
         this.usersRepo = aggregator.getUsersRepo();
@@ -41,17 +40,10 @@ public class MainPresenter implements BookingPresenter {
 
     @Override
     public void handleRequest(String request) {
-        System.out.println(request);
         var allValues = request.split(", ");
-        //Booking ? ou réservation
 
         Booking booking = new Booking(
-                allValues[0], allValues[1],
-                LocalDate.parse(allValues[2]),
-                LocalTime.parse(allValues[3]),
-                LocalTime.parse(allValues[4]),
-                allValues[5],
-                Integer.parseInt(allValues[6])
+                allValues[0], allValues[1], LocalDate.parse(allValues[2]), LocalTime.parse(allValues[3]), LocalTime.parse(allValues[4]), allValues[5], Integer.parseInt(allValues[6])
         );
 
         //Si toutes les conditons sont valides alors on peut enregistrer la réservation
@@ -65,8 +57,6 @@ public class MainPresenter implements BookingPresenter {
         }
         calendarRepository.writeTo(booking);
         view.seeReservationsFor(LocalDate.now());
-
-
     }
 
 
