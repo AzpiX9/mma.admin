@@ -3,7 +3,6 @@
  */
 package org.helmo.mma.admin.views;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.helmo.mma.admin.presentations.BookingPresenter;
 import org.helmo.mma.admin.presentations.MainView;
 
@@ -11,7 +10,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
@@ -35,7 +33,8 @@ public class CLIView implements MainView {
             System.out.println("""
                     1. Changer de date
                     2. Encoder une réservation
-                    3. Quitter
+                    3. Consulter une réservation
+                    4. Quitter
                     """);
             int choice = scanner.nextInt();
             scanner.nextLine();
@@ -46,18 +45,32 @@ public class CLIView implements MainView {
                     String date = scanner.nextLine();
                     currentDate = LocalDate.parse(date);
                 }
-                case 2 -> {
-                    encodeNewBookedRoom();
-                }
-                case 3 -> {
+                case 2 -> encodeNewBookedRoom();
+                case 3 -> viewReservation();
+                case 4 -> {
                     return;
                 }
-                default -> System.out.println("Choix invalide");
-
+                default -> displayError("Choix invalide");
             }
-
         }
+    }
 
+    public void viewReservation() {
+        StringBuilder builder = new StringBuilder();
+        System.out.println("Date : ");
+        String date = scanner.nextLine();
+        builder.append(date);
+
+        System.out.println("Id salle : ");
+        String id = scanner.nextLine();
+        builder.append(id+", ");
+
+        System.out.println("Horaire : ");
+        String horaire = scanner.nextLine();
+        builder.append(horaire);
+
+        //envoi de la requete
+        presenter.handleRequest(builder.toString()); //TODO: Refactoriser
     }
 
     private void encodeNewBookedRoom() {
@@ -116,5 +129,15 @@ public class CLIView implements MainView {
     @Override
     public void displayError(String error) {
         System.err.println("[ERREUR] : "+error);
+    }
+
+    @Override
+    public void displayAReservation(String bookingGiven){
+        System.out.println(bookingGiven);
+
+        System.out.println("Salle :"); //nom de la salle et sa capacité
+        System.out.println(" ,"); //date, crénau
+        System.out.println("Description : %s");
+        System.out.println("Responsable : %s (%s, %s)");
     }
 }

@@ -7,4 +7,6 @@ public interface MainView {
 
     void displayError(String error);
 
+    void displayAReservation(String reservation);
+
 }
