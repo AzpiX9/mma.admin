@@ -4,6 +4,7 @@
 package org.helmo.mma.admin.infrastructures;
 
 import org.helmo.mma.admin.domains.core.Room;
+import org.helmo.mma.admin.domains.exceptions.RoomException;
 import org.helmo.mma.admin.domains.rooms.CanReadRooms;
 
 import java.io.BufferedReader;
@@ -19,6 +20,7 @@ import java.util.List;
 public class RoomFileRepository implements CanReadRooms {
 
     private final String filePath;
+    private List<Room> rooms = new ArrayList<>();
 
     public RoomFileRepository(String path) {
         filePath = path;
@@ -26,27 +28,28 @@ public class RoomFileRepository implements CanReadRooms {
 
     @Override
     public List<Room> getRooms() {
-        List<Room> rooms = new ArrayList<>();
+        rooms.clear();
         try(BufferedReader br = Files.newBufferedReader(Path.of(filePath))) {
             String line;
             while ((line = br.readLine()) != null){
                 var values = line.split(";");
-
                 rooms.add(new Room(values[0],values[1],Integer.parseInt(values[2])));
             }
 
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            throw new RoomException("Aucune salle n'est disponible");
         }
 
         return rooms;
     }
 
+    @Override
     public Room getRoom(String roomId) {
-
         return getRooms()
                 .stream()
                 .filter(room -> room.Id().equals(roomId))
-                .findFirst().orElse(new Room("-1","Backrooms",Integer.MAX_VALUE));
+                .findFirst().orElseThrow(() -> new RoomException("Aucune salle n'est trouvé"));
     }
+
+
 }

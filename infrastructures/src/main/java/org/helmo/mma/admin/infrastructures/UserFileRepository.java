@@ -1,6 +1,7 @@
 package org.helmo.mma.admin.infrastructures;
 
 import org.helmo.mma.admin.domains.core.User;
+import org.helmo.mma.admin.domains.exceptions.UserException;
 import org.helmo.mma.admin.domains.users.CanReadUsers;
 
 import java.io.BufferedReader;
@@ -23,6 +24,7 @@ public class UserFileRepository implements CanReadUsers {
     //List ou Map ? pour stocker et récupérer les users
     @Override
     public List<User> getUsers() {
+        users.clear();
         try(BufferedReader br = Files.newBufferedReader(Path.of(filePath))) {
             String line;
             while ((line = br.readLine()) != null){
@@ -32,7 +34,7 @@ public class UserFileRepository implements CanReadUsers {
                 //this.usersM.put(values[0],userTemp);
             }
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            throw new UserException("Aucun fichier utilisateur");
         }
 
         return this.users;
@@ -40,7 +42,6 @@ public class UserFileRepository implements CanReadUsers {
 
     @Override
     public User getUser(String matricule) {
-
         return getUsers()
                 .stream()
                 .filter(user -> user.Matricule().equals(matricule))
