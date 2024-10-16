@@ -6,34 +6,37 @@ package org.helmo.mma.admin.app;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import org.helmo.mma.admin.domains.core.BookingAggregator;
+import org.helmo.mma.admin.domains.exceptions.DirException;
 import org.helmo.mma.admin.infrastructures.ICALViewer;
 import org.helmo.mma.admin.infrastructures.RoomFileRepository;
 import org.helmo.mma.admin.infrastructures.UserFileRepository;
 import org.helmo.mma.admin.presentations.MainPresenter;
 import org.helmo.mma.admin.views.CLIView;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class Program {
     private static String path = "";
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws DirException {
         if(!validGivenArgs(args)){
-            return;
+            throw new DirException("Valeur invalide ou manquante");
         }
 
         var roomRepository = new RoomFileRepository(path+"\\rooms.csv");
         var userRepository = new UserFileRepository(path+"\\users.csv");
-        var calendarRepository = new ICALViewer(path);
-        //agréger les repos dans le presenter
+        var calendarRepository = new ICALViewer(path+"\\Event.ics");
+
         var aggregator = new BookingAggregator(roomRepository, userRepository, calendarRepository);
 
         var mainPresenter = new MainPresenter(aggregator);
-        var view = new CLIView(System.in,System.out,mainPresenter);
-
-        view.run();
-
+        try(var view = new CLIView(System.in,System.out,mainPresenter)){
+            view.run();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
