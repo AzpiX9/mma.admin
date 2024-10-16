@@ -51,9 +51,10 @@ public class ArchTest {
     void infrastructures_should_depend_on_domains() {
         var presentationRule = classes().that()
                 .resideInAPackage("..infrastructures..")
-                .should().dependOnClassesThat()
+                .should().onlyDependOnClassesThat()
                 .resideInAnyPackage("java..",
                         "org.apache.logging.log4j..",
+                        "net.fortuna.ical4j..",
                         globalPackageName + ".infrastructures..",
                         globalPackageName + ".domains..");
 
@@ -77,7 +78,7 @@ public class ArchTest {
     void views_should_depend_on_presentations() {
         var presentationRule = classes().that()
                 .resideInAPackage("..views..")
-                .should().dependOnClassesThat()
+                .should().onlyDependOnClassesThat()
                 .resideInAnyPackage("java..",
                         "org.apache.logging.log4j..",
                         "joptsimple",
@@ -86,5 +87,6 @@ public class ArchTest {
 
         presentationRule.check(new ClassFileImporter().importPackages(globalPackageName + ".."));
     }
-    
+
 }
+
