@@ -55,8 +55,29 @@ public class MainPresenter implements BookingPresenter {
             view.displayError("Capacité insuffisante");
             return;
         }
-        calendarRepository.writeTo(booking);
+        var bookerUser = usersRepo.getUser(booking.Matricule());
+        calendarRepository.writeTo(booking,bookerUser);
         view.seeReservationsFor(LocalDate.now());
+    }
+
+    @Override
+    public void viewRequest(String request) {
+        var values = request.split(", ");
+        var bookedFound = calendarRepository.getBooking(values[1], LocalTime.parse(values[2]));
+
+        if(bookedFound == null){
+            view.displayError("Aucune correspondance trouvée");
+            return;
+        }
+
+        var room = roomsRepo.getRoom(values[1]);
+        var userString = bookedFound.Username();
+
+        view.displayAReservation(
+                room.Name()+"_"+room.Size()
+                +","+bookedFound.DateJour()+","+bookedFound.Debut()
+                +","+bookedFound.Fin()+","+userString+","+bookedFound.Summary()
+        );
     }
 
 
