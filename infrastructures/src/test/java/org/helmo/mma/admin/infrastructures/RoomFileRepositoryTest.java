@@ -59,7 +59,7 @@ class RoomFileRepositoryTest {
     }
 
     @Test
-    public void roomGiven_ShouldNotExist(){
+    public void roomGiven_ShouldNotExist_AndThrowRoomException(){
         buildFile(VALID_PATH);
         var roomReader = new RoomFileRepository(VALID_PATH);
         var idGiven = "L5";
