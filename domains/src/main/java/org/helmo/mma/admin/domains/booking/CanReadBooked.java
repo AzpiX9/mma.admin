@@ -1,13 +1,17 @@
 package org.helmo.mma.admin.domains.booking;
 
-import org.helmo.mma.admin.domains.core.Booking;
+import org.helmo.mma.admin.domains.core.LocalEvent;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
-public interface CanReadBooked <T> {
+public interface CanReadBooked {
     void readTo();
 
-    List<T> retrieveAll();
+    List<LocalEvent> retrieveAll();
 
-    Booking getBooking(String id);
+    LocalEvent getBooking(String id, LocalTime time);
+
+    List<LocalEvent> getBookingsBy(String location, LocalDate date);
 }

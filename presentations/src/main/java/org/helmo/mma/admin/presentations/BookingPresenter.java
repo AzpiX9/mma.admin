@@ -8,4 +8,6 @@ public interface BookingPresenter {
     void seeBookingRequest(LocalDate date);
 
     void handleRequest(String request);
+
+    void viewRequest(String request);
 }
