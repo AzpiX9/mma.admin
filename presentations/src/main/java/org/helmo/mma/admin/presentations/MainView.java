@@ -12,6 +12,6 @@ public interface MainView {
 
     void displayAReservation(String reservation);
 
-    public void displayByLocalEvs(String name,List<String> elems);
+    void displayByLocalEvs(String name, List<String> elems);
 
 }
