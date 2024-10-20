@@ -17,10 +17,10 @@ import java.util.List;
 
 public class MainPresenter implements BookingPresenter {
 
-    private MainView view;
-    private CanReadRooms roomsRepo;
-    private CanReadUsers usersRepo;
-    private CalendarRepository calendarRepository;
+    private final MainView view;
+    private final CanReadRooms roomsRepo;
+    private final CanReadUsers usersRepo;
+    private final CalendarRepository calendarRepository;
 
     public MainPresenter(MainView view ,BookingAggregator aggregator) {
         this.roomsRepo = aggregator.getRoomsRepo();
