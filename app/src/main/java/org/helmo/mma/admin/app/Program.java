@@ -31,12 +31,13 @@ public class Program {
 
         var aggregator = new BookingAggregator(roomRepository, userRepository, calendarRepository);
 
-        var mainPresenter = new MainPresenter(aggregator);
-        try(var view = new CLIView(System.in,System.out,mainPresenter)){
+        try(var view = new CLIView(System.in,System.out)){
+            var mainPresenter = new MainPresenter(view,aggregator);
             view.run();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
     }
 
     /**
