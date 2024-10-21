@@ -3,6 +3,7 @@
  */
 package org.helmo.mma.admin.views;
 
+import org.apache.commons.lang3.StringUtils;
 import org.helmo.mma.admin.presentations.BookingPresenter;
 import org.helmo.mma.admin.presentations.MainView;
 
@@ -26,26 +27,21 @@ public class CLIView implements MainView, AutoCloseable {
     private PrintWriter writer;
     private LocalDate currentDate = LocalDate.now();
 
-    public CLIView(InputStream input, OutputStream output, BookingPresenter presenter){
+    public CLIView(InputStream input, OutputStream output){
         scanner = new Scanner(input);
         writer = new PrintWriter(output);
-        this.presenter = presenter;
-        this.presenter.setView(this);
     }
 
     public void run(){
         while (true){
+            seeReservationsFor(currentDate);
             int choice = displayMenu();
-
             switch (choice){
-                case 1 -> {
-                    System.out.println("Entrez une date ");
-                    String date = scanner.nextLine();
-                    currentDate = LocalDate.parse(date);
-                }
+                case 1 -> changeDate();
                 case 2 -> encodeNewBookedRoom();
                 case 3 -> viewReservation();
-                case 4 -> {
+                case 4 -> seeAvailable();
+                case 5 -> {
                     return;
                 }
                 default -> displayError("Choix invalide");
@@ -53,12 +49,26 @@ public class CLIView implements MainView, AutoCloseable {
         }
     }
 
+    private void seeAvailable() {
+        var builder = new StringBuilder();
+        builder.append((LocalDate) getInput("Date",LocalDate::parse));
+        builder.append(", ").append((int) getInput("Nombre de personnes", Integer::parseInt));
+        builder.append(", ").append((LocalTime) getInput("Durée", s-> LocalTime.parse(s, DateTimeFormatter.ofPattern("H:mm"))));
+
+        presenter.availableRequest(builder.toString());
+    }
+
+    private void changeDate() {
+        currentDate = getInput("Entrez une date",LocalDate::parse);
+    }
+
     private int displayMenu() {
         System.out.println("""
                 1. Changer de date
                 2. Encoder une réservation
                 3. Consulter une réservation
-                4. Quitter
+                4. Voir les disponibilités
+                5. Quitter
                 """);
         int choice = scanner.nextInt();
         scanner.nextLine();
@@ -69,29 +79,27 @@ public class CLIView implements MainView, AutoCloseable {
         StringBuilder builder = new StringBuilder();
         builder.append((LocalDate) getInput("Date", LocalDate::parse));
         builder.append(", ").append((String) getInput("Id Salle", s->s));
-        builder.append(", ").append((LocalTime) getInput("Horaire", LocalTime::parse));
+        builder.append(", ").append((LocalTime) getInput("Horaire", s-> LocalTime.parse(s, DateTimeFormatter.ofPattern("H:mm"))));
 
-
-        //envoi de la requete
-        presenter.viewRequest(builder.toString()); //TODO: Refactoriser
+        presenter.viewRequest(builder.toString());
     }
 
     private void encodeNewBookedRoom() {
         StringBuilder builder = new StringBuilder();
 
-        builder.append((String) getInput("Id salle : ", s -> s));
-        builder.append(", ").append((String) getInput("Matricule : ", s -> s));
-        builder.append(", ").append((LocalDate) getInput("Jour : ", LocalDate::parse));
-        builder.append(", ").append((LocalTime) getInput("Heure début : ", s -> LocalTime.parse(s, DateTimeFormatter.ofPattern("HH:mm"))));
-        builder.append(", ").append((LocalTime) getInput("Heure fin : ", s -> LocalTime.parse(s, DateTimeFormatter.ofPattern("HH:mm"))));
-        builder.append(", ").append((String) getInput("Description : ", s -> s));
-        builder.append(", ").append((int) getInput("Nombre de personnes : ", Integer::parseInt));
+        builder.append((String) getInput("Id salle", s -> s));
+        builder.append(", ").append((String) getInput("Matricule", s -> s));
+        builder.append(", ").append((LocalDate) getInput("Jour", LocalDate::parse));
+        builder.append(", ").append((LocalTime) getInput("Heure début", s -> LocalTime.parse(s, DateTimeFormatter.ofPattern("H:mm"))));
+        builder.append(", ").append((LocalTime) getInput("Heure fin", s -> LocalTime.parse(s, DateTimeFormatter.ofPattern("H:mm"))));
+        builder.append(", ").append((String) getInput("Description", s -> s));
+        builder.append(", ").append((int) getInput("Nombre de personnes", Integer::parseInt));
 
-        presenter.handleRequest(builder.toString());
+        presenter.writeEventRequest(builder.toString());
     }
 
     /**
-     *
+     * Demande à l'utilisateur d'écrire dans la console
      * @param prompt
      * @param parser
      * @return
@@ -101,6 +109,12 @@ public class CLIView implements MainView, AutoCloseable {
         System.out.println(prompt + " : ");
         String input = scanner.nextLine();
         return parser.apply(input);
+    }
+
+    @Override
+    public void setPresenter(BookingPresenter presenter) {
+        this.presenter = presenter;
+
     }
 
     @Override
@@ -141,12 +155,34 @@ public class CLIView implements MainView, AutoCloseable {
      * Permet d'afficher en grille les locaux pris via le crénau
      * @param elems
      */
-    public void displayAllLocalEvs(List<String> elems){
-        for (var elem : elems){
-            System.out.print(elem+" |");
-            for (int i = 0; i < 18; i++) {
-
+    public void displayByLocalEvs(String name,List<String> elems){
+        LocalTime reference = LocalTime.of(8,0);
+        System.out.printf("%4s |",name);
+        for (int i = 0; i < 18; i++) {
+            String result = String.format("%5s|"," ");
+            for (var elem : elems) {
+                var begin = LocalTime.parse(elem.split("-")[0]);
+                var end = LocalTime.parse(elem.split("-")[1]);
+                if((reference.isAfter(begin) || reference.equals(begin))&& reference.isBefore(end)){
+                    result = String.format(" %s |","X".repeat(3));
+                    break;
+                }
             }
+
+            System.out.print(result);
+            reference = reference.plusMinutes(30);
         }
+        System.out.println();
     }
+
+    @Override
+    public void displayAvailable(List<String> evs) {
+        System.out.printf("%n%5s | %s | %s | %s |%n","Local", StringUtils.center("Date",10),"Heure de début","Heure de Fin");
+        for (String ev : evs) {
+            System.out.println(ev);
+        }
+        System.out.println();
+    }
+
+
 }

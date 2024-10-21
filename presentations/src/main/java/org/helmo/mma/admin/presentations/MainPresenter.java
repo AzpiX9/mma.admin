@@ -3,6 +3,7 @@
  */
 package org.helmo.mma.admin.presentations;
 
+import org.helmo.mma.admin.domains.booking.AvailableSlotService;
 import org.helmo.mma.admin.domains.booking.CalendarRepository;
 import org.helmo.mma.admin.domains.core.Booking;
 import org.helmo.mma.admin.domains.core.BookingAggregator;
@@ -10,6 +11,7 @@ import org.helmo.mma.admin.domains.core.LocalEvent;
 import org.helmo.mma.admin.domains.rooms.CanReadRooms;
 import org.helmo.mma.admin.domains.users.CanReadUsers;
 
+import java.nio.file.Files;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -51,7 +53,7 @@ public class MainPresenter implements BookingPresenter {
     }
 
     @Override
-    public void handleRequest(String request) {
+    public void writeEventRequest(String request) {
         var allValues = request.split(", ");
         Booking booking = new Booking(allValues[0], allValues[1], LocalDate.parse(allValues[2]), LocalTime.parse(allValues[3]), LocalTime.parse(allValues[4]), allValues[5], Integer.parseInt(allValues[6]));
 
@@ -95,6 +97,28 @@ public class MainPresenter implements BookingPresenter {
                 room.Name()+"_"+room.Size() +","+bookedFound.DateJour()+","+bookedFound.Debut()
                 +","+bookedFound.Fin()+","+userString+","+bookedFound.Summary()
         );
+
+    }
+
+    @Override
+    public void availableRequest(String request) {
+        var values = request.split(", ");
+        var durationGiven = LocalTime.parse(values[2]);
+        List<String> evs = new ArrayList<>();
+
+        var roomResized = roomsRepo.getRooms().stream().filter(r -> Integer.parseInt(values[1]) <= r.Size()).toList();
+        for (int plusDay = 0; plusDay <= 2; plusDay++) {
+            for(var room : roomResized){
+                var slotsAvailable = new AvailableSlotService(calendarRepository.getBookingsBy(room.Id(),LocalDate.parse(values[0]).plusDays(plusDay)));
+                if(durationGiven.isBefore(slotsAvailable.getTimeDifference())){
+                    var slot = slotsAvailable.computeTimeSlot().split("-");
+                    var singleValue = String.format("%-5s | %s | %-14s | %-12s |",room.Id(),LocalDate.parse(values[0]).plusDays(plusDay),slot[0],slot[1]);
+                    evs.add(singleValue);
+                }
+            }
+        }
+
+        view.displayAvailable(evs);
 
     }
 
