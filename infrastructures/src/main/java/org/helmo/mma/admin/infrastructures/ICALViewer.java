@@ -13,6 +13,7 @@ import org.helmo.mma.admin.domains.booking.CalendarRepository;
 import org.helmo.mma.admin.domains.core.Booking;
 import org.helmo.mma.admin.domains.core.LocalEvent;
 import org.helmo.mma.admin.domains.core.User;
+import org.helmo.mma.admin.domains.exceptions.CalendarException;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -35,36 +36,45 @@ public class ICALViewer implements CalendarRepository {
     private List<LocalEvent> events = new ArrayList<>();
 
     public ICALViewer(String path) {
-        this.calendar = new Calendar();
-        this.calendar.add(ImmutableVersion.VERSION_2_0);
+        var directory = Paths.get(path);
         this.pathFile = path;
+        try (var inputS = Files.newInputStream(directory)){
+            var v = Files.notExists(directory);
+            var builder = new CalendarBuilder();
+            this.calendar = builder.build(inputS);
+            this.calendar.add(ImmutableVersion.VERSION_2_0);
+
+
+        } catch (IOException | ParserException e) {
+            throw new CalendarException(e.getMessage());
+        }
 
     }
 
     @Override
     public void writeTo(Booking booking, User user) {
-        ZonedDateTime debut = (booking.Debut().atDate(booking.JourReservation())).atZone(ZoneId.systemDefault());
-        ZonedDateTime fin = (booking.Fin().atDate(booking.JourReservation())).atZone(ZoneId.systemDefault());
+        var bookingDto = new BookingDTO(booking);
+        ZonedDateTime debut = bookingDto.getDebut();
+        ZonedDateTime fin = bookingDto.getFin();
+        VEvent event = parseVEvent(bookingDto, user, debut, fin);
 
-        VEvent event = parseVEvent(booking, user, debut, fin);
-        UidGenerator uidGenerator;
-        var outputFile = new File(pathFile);
         try(var fos = Files.newOutputStream(Paths.get(pathFile))) {
-            uidGenerator = new FixedUidGenerator(booking.IdSalle()+"-"+booking.Matricule());
+            UidGenerator uidGenerator = new FixedUidGenerator(bookingDto.getSalle()+"-"+bookingDto.getMatricule());
             event.add(uidGenerator.generateUid());
             calendar.add(event);
             var outputter = new CalendarOutputter();
             outputter.output(calendar, fos);
+            events.add(parseToBooking(event));
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new CalendarException("Calendrier invalide");
         }
 
     }
 
-    private static VEvent parseVEvent(Booking booking, User user, ZonedDateTime debut, ZonedDateTime fin) {
-        VEvent event = new VEvent(debut, fin, booking.Description());
-        Organizer attendee = new Organizer(user.Nom()+"_"+ user.Prenom()+"_"+ booking.Matricule()+"_"+user.Email());
-        Location salle = new Location(booking.IdSalle());
+    private static VEvent parseVEvent(BookingDTO booking, User user, ZonedDateTime debut, ZonedDateTime fin) {
+        VEvent event = new VEvent(debut, fin, booking.getDescription());
+        Organizer attendee = new Organizer(user.Nom()+"_"+ user.Prenom()+"_"+ booking.getMatricule()+"_"+user.Email());
+        Location salle = new Location(booking.getSalle());
         event.add(salle);
         event.add(attendee);
 
@@ -98,9 +108,8 @@ public class ICALViewer implements CalendarRepository {
 
     @Override
     public LocalEvent getBooking(String id, LocalTime givenTime) {
-        var all = retrieveAll();
         LocalEvent result = null;
-        for(var event : all) {
+        for(var event : retrieveAll()) {
             if(event.Location().equals(id) && isBetweenTime(event,givenTime)) {
                 result = event;
             }
@@ -121,6 +130,11 @@ public class ICALViewer implements CalendarRepository {
                 (crenau.isAfter(event.Debut()) && crenau.isBefore(event.Fin()));
     }
 
+    /**
+     * Analyse et transforme un objet {@code VEvent} en {@code LocalEvent}
+     * @param vEvent
+     * @return LocalEvent
+     */
     public LocalEvent parseToBooking(VEvent vEvent){
         var loc = vEvent.getLocation().get().getValue();
         var org = vEvent.getOrganizer().get().getValue();

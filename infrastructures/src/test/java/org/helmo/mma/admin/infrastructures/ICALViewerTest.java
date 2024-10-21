@@ -1,254 +1,176 @@
 package org.helmo.mma.admin.infrastructures;
 
-
-import net.fortuna.ical4j.model.component.VEvent;
-import net.fortuna.ical4j.model.parameter.Cn;
-import net.fortuna.ical4j.model.parameter.Email;
-import net.fortuna.ical4j.model.property.Location;
-import net.fortuna.ical4j.model.property.Organizer;
 import org.helmo.mma.admin.domains.core.Booking;
 import org.helmo.mma.admin.domains.core.LocalEvent;
 import org.helmo.mma.admin.domains.core.User;
-import org.junit.jupiter.api.AfterEach;
+import org.helmo.mma.admin.domains.exceptions.CalendarException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.*;
-import java.util.ArrayList;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
-import java.util.stream.Collectors;
+
+import net.fortuna.ical4j.model.Calendar;
+import net.fortuna.ical4j.model.property.immutable.ImmutableVersion;
+import net.fortuna.ical4j.data.CalendarOutputter;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ICALViewerTest {
+public class ICALViewerTest {
 
-    private static final String TEST_FILE_PATH = "./src/test/resources/Event.ics";
-    private ICALViewer icalViewer;
+    private static final String TEST_FILE_PATH = "test_calendar.ics";
+    private ICALViewer viewer;
 
     @BeforeEach
-    void setUp() {
-        icalViewer = new ICALViewer(TEST_FILE_PATH);
+    public void setUp() throws Exception {
+        // Créer le fichier iCal s'il n'existe pas déjà
+        createTestICalFile();
+
+        // Initialiser le viewer avec le fichier iCal existant
+        viewer = new ICALViewer(TEST_FILE_PATH);
     }
 
     @AfterEach
-    void cleanUp() throws IOException {
-        Files.deleteIfExists(Paths.get(TEST_FILE_PATH));
+    public void tearDown() {
+        // Supprimer le fichier iCal après chaque test
+        File file = new File(TEST_FILE_PATH);
+        if (file.exists()) {
+            file.delete();
+        }
     }
 
-    @Test
-    void testWriteToCreatesICalFile() {
-        // Création d'un Booking factice
-        Booking booking = new Booking("LLL","A123456",LocalDate.now(),LocalTime.of(8,0),LocalTime.of(10,0),"SSS",5);
-        User user = new User("A123456","A","B","a.b@de.fg");
+    private void createTestICalFile() throws IOException {
+        File file = new File(TEST_FILE_PATH);
 
-        icalViewer.writeTo(booking, user);
+        // Si le fichier n'existe pas, on le crée avec un calendrier vide
+        if (!file.exists()) {
+            Calendar calendar = new Calendar();
+            calendar.add(ImmutableVersion.VERSION_2_0);
 
-        // Vérifier que le fichier a bien été créé
-        assertTrue(Files.exists(Paths.get(TEST_FILE_PATH)));
-    }
-
-    @Test
-    void testWriteToIOException() {
-        // Cas d'erreur avec un chemin de fichier incorrect
-        ICALViewer invalidViewer = new ICALViewer("/invalid/path.ics");
-
-        Booking booking = new Booking("LLL","A123456",LocalDate.now(),LocalTime.of(8,0),LocalTime.of(10,0),"SSS",5);
-        User user = new User("A123456","A","B","a.b@de.fg");
-
-        assertThrows(RuntimeException.class, () -> {
-            invalidViewer.writeTo(booking, user);
-        });
-    }
-
-    @Test
-    public void shouldAddEvent(){
-        var icsFile = new ICALViewer(TEST_FILE_PATH);
-        var bookedRoom = new Booking("A1","X000000", LocalDate.now(),
-                LocalTime.of(9,0),LocalTime.of(10,30),
-                "Oonga Boonga",13);
-        icsFile.writeTo(bookedRoom,new User("X000000","A","B","a.b@cd.ef"));
-
-        assertTrue(!icsFile.retrieveAll().isEmpty());
-    }
-
-    @Test void shouldRead_AndRetrieveFirstVEvent(){
-        String pathName = "./src/test/resources/Event.ics";
-        var icsFile = new ICALViewer(pathName);
-
-        var bookedRoom = new Booking("A1","X000000", LocalDate.now(),
-                LocalTime.of(9,0),LocalTime.of(10,30),
-                "Oonga Boonga",13);
-        icsFile.writeTo(bookedRoom,new User("X000000","A","B","a.b@cd.ef"));
-
-        var all = icsFile.retrieveAll();
-        LocalEvent expected = new LocalEvent("A_B_X000000_a.b@cd.ef","A1",LocalDate.now(),LocalTime.of(9,0),LocalTime.of(10,30),"Oonga Boonga");
-        LocalEvent actualEvent = all.get(0);
-        assertEquals(expected,actualEvent);
-    }
-
-    @Test
-    void shouldWrite_AndRetrieveVEvent(){
-        List<VEvent> events = new ArrayList<>();
-
-        var org1 = new Organizer().add(new Cn("Jean Mi")).add(new Email("j.mi@helmo.be"));
-        var loc1 = new Location("LB1");
-        var ev1 = createVEvent(
-                ZonedDateTime.of(LocalDate.now(),LocalTime.of(10,0), ZoneId.systemDefault()),
-                ZonedDateTime.of(LocalDate.now(),LocalTime.of(12,30), ZoneId.systemDefault())
-                ,"EEEE",loc1,(Organizer) org1);
-
-        var org2 = new Organizer().add(new Cn("Jonny Géchar")).add(new Email("j.gechar@helmo.be"));
-        var loc2 = new Location("LB2");
-        var ev2 = createVEvent(ZonedDateTime.now().plusDays(1),ZonedDateTime.now().plusDays(1).plusMinutes(30),"FFFF",loc2,(Organizer) org2);
-
-        var org3 = new Organizer().add(new Cn("Jean Mi")).add(new Email("j.mi@helmo.be"));
-        var loc3 = new Location("LB1");
-        var ev3 = createVEvent(
-                ZonedDateTime.of(LocalDate.now(),LocalTime.of(14,0), ZoneId.systemDefault()),
-                ZonedDateTime.of(LocalDate.now(),LocalTime.of(15,30), ZoneId.systemDefault()),
-                "EEEE2",loc3,(Organizer) org3);
-
-        events.add(ev1);
-        events.add(ev2);
-        events.add(ev3);
-
-        List<String> allDay = new ArrayList<>();
-        List<String> times = new ArrayList<>();
-
-        for (var e : events){
-            var tempB = LocalTime.from( e.getDateTimeStart().get().getDate());
-            var tempE = LocalTime.from( e.getEndDate().get().getDate());
-            if(LocalDate.from(e.getDateTimeStart().get().getDate()).equals(LocalDate.now())){
-                times.add(tempB+"-"+tempE);
+            try (FileOutputStream fout = new FileOutputStream(file)) {
+                new CalendarOutputter().output(calendar, fout);
             }
         }
-        times.forEach(System.out::println);
-
-        LocalTime lt = LocalTime.of(8,0);
-        for (int i = 0; i < 18; i++) {
-            String result = "0";
-            for (var t : times){
-                var bounds = t.split("-");
-                var begin = LocalTime.parse(bounds[0]);
-                var end = LocalTime.parse(bounds[1]);
-                if ((lt.isAfter(begin) || lt.equals(begin)) && (lt.isBefore(end))) {
-                    result = "\u274c";
-                    break;
-                }
-                allDay.add(result);
-            }
-            System.out.print(result+" ");
-            lt = lt.plusMinutes(30);
-        }
-
-        allDay.forEach(System.out::print);
-
     }
 
     @Test
-    public void shouldRetrieve_EventsOnSpecified_Location_And_Time(){
-        String pathName = "./src/test/resources/Event2.ics";
-        var icsFile = new ICALViewer(pathName);
+    public void testWriteTo_WithValidData() {
+        // Créer un utilisateur et une réservation fictive
+        User user = new User("B1234", "John", "Doe", "john.doe@example.com");
+        Booking booking = new Booking("Room101", "B1234", LocalDate.now(), LocalTime.of(10, 0), LocalTime.of(11, 0), "Meeting", 5);
 
-        List<LocalEvent> allEvs = new ArrayList<>();
-        allEvs.add(new LocalEvent("AAA","LLL",LocalDate.of(2024,10,16),LocalTime.of(9,0), LocalTime.of(10,30),"SSS" ));
-        allEvs.add(new LocalEvent("BBB","VVV",LocalDate.of(2024,10,16),LocalTime.of(10,0), LocalTime.of(10,30),"SSS" ));
-        allEvs.add(new LocalEvent("AAA","LLL",LocalDate.of(2024,10,16),LocalTime.of(12,0), LocalTime.of(13,30),"SSS" ));
+        // Appeler la méthode writeTo
+        viewer.writeTo(booking, user);
 
-        var expected = allEvs.stream().filter(s -> s.Location().equals("LLL") && LocalDate.of(2024,10,16).equals(s.DateJour())).toList();
-        var actual = icsFile.getBookingsBy("LLL",LocalDate.of(2024,10,16));
+        // Lire à nouveau pour vérifier si l'événement est bien ajouté
+        List<LocalEvent> events = viewer.retrieveAll();
+        assertFalse(events.isEmpty(), "L'événement n'a pas été ajouté au fichier iCal");
 
-        assertEquals(expected,actual);
-
+        LocalEvent event = events.get(0);
+        assertEquals("Room101", event.Location());
+        assertEquals("Meeting", event.Summary());
+        assertEquals(LocalTime.of(10, 0), event.Debut());
     }
 
     @Test
-    void testReadToLoadsEvents() {
-        // Écrire un événement pour que le fichier ne soit pas vide
-        Booking booking = new Booking("LLL","A123456",LocalDate.now(),LocalTime.of(8,0),LocalTime.of(10,0),"SSS",5);
-        User user = new User("A123456","A","B","a.b@de.fg");
+    public void testWriteTo_InvalidFilePath_ShouldThrowCalendarException() {
+        // Créer un viewer avec un fichier iCal non existant ou corrompu
+        ICALViewer invalidViewer = new ICALViewer("invalid_path.ics");
 
-        icalViewer.writeTo(booking, user);
+        User user = new User("C9999", "Alice", "Wonderland", "alice.wonderland@example.com");
+        Booking booking = new Booking("Room404", "C9999", LocalDate.now(), LocalTime.of(9, 0), LocalTime.of(10, 0), "Error test", 1);
 
-        icalViewer.readTo();
-        List<LocalEvent> events = icalViewer.retrieveAll();
-
-        // Vérifier que l'événement a bien été ajouté
-        assertEquals(1, events.size());
+        // Vérifier si CalendarException est levé
+        var exception = assertThrows(CalendarException.class, () -> invalidViewer.writeTo(booking, user));
+        assertEquals("org.helmo.mma.admin.domains.exceptions.CalendarException -> invalid_path.ics",exception);
     }
 
     @Test
-    void testReadToParserException() {
-        // Simuler un fichier iCal corrompu
-        Path invalidFile = Paths.get(TEST_FILE_PATH);
-        try {
-            Files.writeString(invalidFile, "INVALID_ICAL_CONTENT");
-        } catch (IOException e) {
-            fail("Erreur d'écriture de fichier de test.");
-        }
+    public void testReadTo_WithEmptyFile_ShouldReturnNoEvents() {
+        // Lire le fichier iCal qui est vide
+        viewer.readTo();
 
-        assertThrows(RuntimeException.class, () -> icalViewer.readTo());
+        List<LocalEvent> events = viewer.retrieveAll();
+        assertTrue(events.isEmpty(), "Aucun événement ne devrait être présent dans un fichier iCal vide.");
     }
 
     @Test
-    void testGetBookingReturnsCorrectEvent() {
-        // Écrire un événement pour tester
-        Booking booking = new Booking("LLL","A123456",LocalDate.now(),LocalTime.of(8,0),LocalTime.of(10,0),"SSS",5);
-        User user = new User("A123456","A","B","a.b@de.fg");
+    public void testGetBooking_WithNoMatchingEvent_ShouldReturnNull() {
+        // Créer un utilisateur et une réservation fictive
+        User user = new User("A5678", "Jane", "Smith", "jane.smith@example.com");
+        Booking booking = new Booking("Room202", "A5678", LocalDate.now(), LocalTime.of(14, 0), LocalTime.of(15, 0), "Conference", 10);
 
-        icalViewer.writeTo(booking, user);
+        // Ajouter un événement à un fichier iCal existant
+        viewer.writeTo(booking, user);
 
-        // Rechercher l'événement à l'heure correspondante
-        LocalEvent event = icalViewer.getBooking(booking.IdSalle(), booking.Debut());
-
-        assertNotNull(event);
-        assertEquals(booking.IdSalle(), event.Location());
+        // Chercher un événement avec un ID qui ne correspond pas
+        LocalEvent event = viewer.getBooking("Room404", LocalTime.of(14, 30));
+        assertNull(event, "Aucun événement ne devrait être trouvé avec un ID non correspondant.");
     }
 
     @Test
-    void testGetBookingsByLocationAndDate() {
-        // Écrire un événement pour une salle et une date
-        Booking booking = new Booking("LLL","A123456",LocalDate.now(),LocalTime.of(8,0),LocalTime.of(10,0),"SSS",5);
-        User user = new User("A123456","A","B","a.b@de.fg");
+    public void testGetBooking_WithMatchingEvent_ShouldReturnEvent() {
+        // Créer un utilisateur et une réservation fictive
+        User user = new User("B4321", "John", "Doe", "john.doe@example.com");
+        Booking booking = new Booking("Room303", "B4321", LocalDate.now(), LocalTime.of(9, 0), LocalTime.of(10, 0), "Workshop", 15);
 
-        icalViewer.writeTo(booking, user);
+        // Ajouter un événement au fichier iCal
+        viewer.writeTo(booking, user);
 
-        List<LocalEvent> events = icalViewer.getBookingsBy(booking.IdSalle(), booking.JourReservation());
-
-        assertFalse(events.isEmpty());
-        assertEquals(booking.IdSalle(), events.get(0).Location());
+        // Chercher l'événement par ID et heure
+        LocalEvent event = viewer.getBooking("Room303", LocalTime.of(9, 30));
+        assertNotNull(event, "L'événement devrait être trouvé pour cette plage horaire");
+        assertEquals("Workshop", event.Summary());
     }
+
     @Test
-    void testGetBookingWithTimeFilters() {
-        // Écrire des événements factices pour tester
-        Booking booking1 = new Booking("LLL", "A123456",LocalDate.now(),LocalTime.of(10, 0), LocalTime.of(12, 0), "Salle1", 8);
-        Booking booking2 = new Booking("LLL", "A123456",LocalDate.now(),LocalTime.of(13, 0), LocalTime.of(14, 0), "Salle1", 7);
-        User user = new User("A123456","A","B","a.b@de.fg");
+    public void testGetBookingsBy_WithMultipleEvents_ShouldReturnFilteredResults() {
+        // Créer plusieurs événements et vérifier leur récupération par emplacement et date
+        User user = new User("C1234", "Alice", "Brown", "alice.brown@example.com");
+        Booking booking1 = new Booking("Room404", "C1234", LocalDate.now(), LocalTime.of(9, 0), LocalTime.of(10, 0), "Training", 8);
+        Booking booking2 = new Booking("Room404", "C5678", LocalDate.now(), LocalTime.of(11, 0), LocalTime.of(12, 0), "Discussion", 12);
 
-        icalViewer.writeTo(booking1, user);
-        icalViewer.writeTo(booking2, user);
+        viewer.writeTo(booking1, user);
+        viewer.writeTo(booking2, user);
 
-        // Rechercher un événement entre 10h et 12h
-        //LocalEvent event = icalViewer.getBooking("Salle1", LocalTime.of(11, 0));
-        //assertNotNull(event);
-        //assertEquals("Salle1", event.Location());
-
-        // Rechercher un événement en dehors de ces heures
-        LocalEvent noEvent = icalViewer.getBooking("Salle1", LocalTime.of(9, 0));
-        assertNull(noEvent);
+        List<LocalEvent> events = viewer.getBookingsBy("Room404", LocalDate.now());
+        assertEquals(2, events.size(), "Deux événements devraient être présents pour cette salle et cette date");
     }
 
-    private VEvent createVEvent(ZonedDateTime beginT, ZonedDateTime endT, String summary, Location location, Organizer organizer) {
-        var event = new VEvent(beginT,endT,summary);
-        event.add(location);
-        event.add(organizer);
-        return event;
+    @Test
+    public void testRetrieveAll_ShouldReturnAllEvents() {
+        // Créer plusieurs événements pour tester retrieveAll
+        User user = new User("C1234", "Alice", "Brown", "alice.brown@example.com");
+        Booking booking1 = new Booking("Room404", "C1234", LocalDate.now(), LocalTime.of(9, 0), LocalTime.of(10, 0), "Training", 8);
+        Booking booking2 = new Booking("Room404", "C5678", LocalDate.now(), LocalTime.of(11, 0), LocalTime.of(12, 0), "Discussion", 12);
+
+        viewer.writeTo(booking1, user);
+        viewer.writeTo(booking2, user);
+
+        List<LocalEvent> events = viewer.retrieveAll();
+        assertEquals(2, events.size(), "Il devrait y avoir deux événements récupérés.");
     }
 
+    @Test
+    public void testParseToBooking_ShouldCorrectlyParseVEvent() {
+        // Test parsing de VEvent à LocalEvent pour garantir la correspondance des données
+        User user = new User("D6789", "Bob", "Builder", "bob.builder@example.com");
+        Booking booking = new Booking("Room505", "D6789", LocalDate.now(), LocalTime.of(15, 0), LocalTime.of(16, 0), "Construction meeting", 3);
 
+        viewer.writeTo(booking, user);
+        viewer.readTo();
+
+        List<LocalEvent> events = viewer.retrieveAll();
+        assertFalse(events.isEmpty(), "Un événement devrait avoir été ajouté.");
+
+        LocalEvent event = events.get(0);
+        assertEquals("Room505", event.Location(), "Le lieu de l'événement doit correspondre.");
+        assertEquals("Construction meeting", event.Summary(), "La description doit correspondre.");
+    }
 }
