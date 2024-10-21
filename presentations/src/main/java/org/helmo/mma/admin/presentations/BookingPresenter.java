@@ -6,7 +6,9 @@ public interface BookingPresenter {
 
     void seeBookingRequest(LocalDate date);
 
-    void handleRequest(String request);
+    void writeEventRequest(String request);
 
     void viewRequest(String request);
+
+    void availableRequest(String request);
 }
