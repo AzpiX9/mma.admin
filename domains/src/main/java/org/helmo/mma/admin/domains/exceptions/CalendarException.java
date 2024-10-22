@@ -2,6 +2,6 @@ package org.helmo.mma.admin.domains.exceptions;
 
 public class CalendarException extends RuntimeException {
     public CalendarException(String message) {
-        super(CalendarException.class.getName()+" -> "+message);
+        super("CalendarException -> "+message);
     }
 }
