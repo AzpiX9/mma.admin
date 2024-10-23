@@ -15,51 +15,70 @@ public class AvailableSlotService {
 
     private final List<LocalEvent> availableSlots;
 
-
-
     public AvailableSlotService(List<LocalEvent> eventsGiven){
         availableSlots = eventsGiven != null ? List.copyOf(eventsGiven) : new ArrayList<>();
     }
 
-    private LocalTime[] checksAvailableSlots(){
-        LocalTime longestStart = null, longestEnd = null;
-        LocalTime currentStart = null;
+    private LocalTime[] checksAvailableSlots() {
+        LocalTime[] currentSlot = {null, null};
+        LocalTime[] longestSlot = {null, null};
+        int longestDuration = 0;
+
         LocalTime temp = BEGIN;
-        int longestDuration = 0, currentDuration = 0;
-
         while (!temp.isAfter(END)) {
-            LocalTime finalTemp = temp;
-            boolean isAvailable = availableSlots.stream()
-                    .noneMatch(interval -> !finalTemp.isBefore(interval.Debut()) && finalTemp.isBefore(interval.Fin()));
-
-            if (isAvailable) {
-                if (currentStart == null) {
-                    currentStart = temp;
-                }
-                currentDuration += 30;
+            if (isAvailableAt(temp)) {
+                currentSlot = updateCurrentSlot(currentSlot, temp);
             } else {
-                // Si la séquence est interrompue, vérifier si elle est la plus longue
-                if (currentDuration > longestDuration) {
-                    longestStart = currentStart;
-                    longestEnd = temp;
-                    longestDuration = currentDuration;
-                }
-                // Réinitialiser les variables de la séquence
-                currentStart = null;
-                currentDuration = 0;
+                longestDuration = updateLongestIfNeeded(currentSlot, longestSlot, longestDuration, temp);
+                resetCurrentSlot(currentSlot);
             }
-
-            temp = temp.plusMinutes(30);  // Incrémentation par 30 minutes
+            temp = temp.plusMinutes(30);
         }
+        updateLongestIfEnd(currentSlot, longestSlot, longestDuration);
 
-        if (currentDuration > longestDuration) {
-            longestStart = currentStart;
-            longestEnd = END;
-        }
-
-        return new LocalTime[] {longestStart,longestEnd};
-
+        return longestSlot;
     }
+
+    private boolean isAvailableAt(LocalTime time) {
+        return availableSlots.stream()
+                .noneMatch(interval -> !time.isBefore(interval.Debut()) && time.isBefore(interval.Fin()));
+    }
+
+    private LocalTime[] updateCurrentSlot(LocalTime[] currentSlot, LocalTime time) {
+        if (currentSlot[0] == null) {
+            currentSlot[0] = time;
+        }
+        currentSlot[1] = time;
+        return currentSlot;
+    }
+
+    private int updateLongestIfNeeded(LocalTime[] currentSlot, LocalTime[] longestSlot, int longestDuration, LocalTime end) {
+        int currentDuration = calculateDuration(currentSlot[0], end);
+        if (currentDuration > longestDuration) {
+            longestSlot[0] = currentSlot[0];
+            longestSlot[1] = end;
+            return currentDuration;
+        }
+        return longestDuration;
+    }
+
+    private void resetCurrentSlot(LocalTime[] currentSlot) {
+        currentSlot[0] = null;
+        currentSlot[1] = null;
+    }
+
+    private void updateLongestIfEnd(LocalTime[] currentSlot, LocalTime[] longestSlot, int longestDuration) {
+        int currentDuration = calculateDuration(currentSlot[0], END);
+        if (currentDuration > longestDuration) {
+            longestSlot[0] = currentSlot[0];
+            longestSlot[1] = END;
+        }
+    }
+
+    private int calculateDuration(LocalTime start, LocalTime end) {
+        return (start != null && end != null) ? (int) java.time.Duration.between(start, end).toMinutes() : 0;
+    }
+
 
     public String computeTimeSlot() {
         var result = checksAvailableSlots();
@@ -75,7 +94,5 @@ public class AvailableSlotService {
 
         return LocalTime.of(hours,minutes);
     }
-
-
 
 }

@@ -1,9 +1,5 @@
-/*
- * This source file is an example
- */
 package org.helmo.mma.admin.views;
 
-import org.apache.commons.lang3.StringUtils;
 import org.helmo.mma.admin.presentations.BookingPresenter;
 import org.helmo.mma.admin.presentations.MainView;
 
@@ -16,15 +12,11 @@ import java.util.Scanner;
 import java.util.function.Function;
 
 public class CLIView implements MainView, AutoCloseable {
-    @Override
-    public void close() throws IOException {
-        this.scanner.close();
-        this.writer.close();
-    }
 
+    private final static DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("H:mm");
     private BookingPresenter presenter;
-    private Scanner scanner;
-    private PrintWriter writer;
+    private final Scanner scanner;
+    private final PrintWriter writer;
     private LocalDate currentDate = LocalDate.now();
 
     public CLIView(InputStream input, OutputStream output){
@@ -32,28 +24,45 @@ public class CLIView implements MainView, AutoCloseable {
         writer = new PrintWriter(output);
     }
 
+    @Override
+    public void close() throws IOException {
+        this.scanner.close();
+        this.writer.close();
+    }
+
     public void run(){
-        while (true){
+        int choice;
+        do {
             seeReservationsFor(currentDate);
-            int choice = displayMenu();
-            switch (choice){
-                case 1 -> changeDate();
-                case 2 -> encodeNewBookedRoom();
-                case 3 -> viewReservation();
-                case 4 -> seeAvailable();
-                case 5 -> {
-                    return;
-                }
-                default -> displayError("Choix invalide");
+            choice = displayMenu();
+            handleChoice(choice);
+        } while (choice != 5);
+    }
+
+    /**
+     * Gestion des choix fait par l'utilisateur
+     * @param choice
+     */
+    private void handleChoice(int choice) {
+        switch (choice){
+            case 1 -> changeDate();
+            case 2 -> encodeNewBookedRoom();
+            case 3 -> viewReservation();
+            case 4 -> seeAvailable();
+            case 5 -> {
+            return;
             }
+            default -> displayError("Choix invalide");
         }
     }
+
+
 
     private void seeAvailable() {
         var builder = new StringBuilder();
         builder.append((LocalDate) getInput("Date",LocalDate::parse));
         builder.append(", ").append((int) getInput("Nombre de personnes", Integer::parseInt));
-        builder.append(", ").append((LocalTime) getInput("Durée", s-> LocalTime.parse(s, DateTimeFormatter.ofPattern("H:mm"))));
+        builder.append(", ").append((LocalTime) getInput("Durée", s-> LocalTime.parse(s, TIME_FORMATTER)));
 
         presenter.availableRequest(builder.toString());
     }
@@ -79,7 +88,7 @@ public class CLIView implements MainView, AutoCloseable {
         StringBuilder builder = new StringBuilder();
         builder.append((LocalDate) getInput("Date", LocalDate::parse));
         builder.append(", ").append((String) getInput("Id Salle", s->s));
-        builder.append(", ").append((LocalTime) getInput("Horaire", s-> LocalTime.parse(s, DateTimeFormatter.ofPattern("H:mm"))));
+        builder.append(", ").append((LocalTime) getInput("Horaire", s-> LocalTime.parse(s, TIME_FORMATTER)));
 
         presenter.viewRequest(builder.toString());
     }
@@ -90,8 +99,8 @@ public class CLIView implements MainView, AutoCloseable {
         builder.append((String) getInput("Id salle", s -> s));
         builder.append(", ").append((String) getInput("Matricule", s -> s));
         builder.append(", ").append((LocalDate) getInput("Jour", LocalDate::parse));
-        builder.append(", ").append((LocalTime) getInput("Heure début", s -> LocalTime.parse(s, DateTimeFormatter.ofPattern("H:mm"))));
-        builder.append(", ").append((LocalTime) getInput("Heure fin", s -> LocalTime.parse(s, DateTimeFormatter.ofPattern("H:mm"))));
+        builder.append(", ").append((LocalTime) getInput("Heure début", s -> LocalTime.parse(s, TIME_FORMATTER)));
+        builder.append(", ").append((LocalTime) getInput("Heure fin", s -> LocalTime.parse(s, TIME_FORMATTER)));
         builder.append(", ").append((String) getInput("Description", s -> s));
         builder.append(", ").append((int) getInput("Nombre de personnes", Integer::parseInt));
 
@@ -155,6 +164,7 @@ public class CLIView implements MainView, AutoCloseable {
      * Permet d'afficher en grille les locaux pris via le crénau
      * @param elems
      */
+    @Override
     public void displayByLocalEvs(String name,List<String> elems){
         LocalTime reference = LocalTime.of(8,0);
         System.out.printf("%4s |",name);
@@ -177,7 +187,7 @@ public class CLIView implements MainView, AutoCloseable {
 
     @Override
     public void displayAvailable(List<String> evs) {
-        System.out.printf("%n%5s | %s | %s | %s |%n","Local", StringUtils.center("Date",10),"Heure de début","Heure de Fin");
+        System.out.printf("%n%5s | %10s | %s | %s |%n","Local", "Date","Heure de début","Heure de Fin");
         for (String ev : evs) {
             System.out.println(ev);
         }

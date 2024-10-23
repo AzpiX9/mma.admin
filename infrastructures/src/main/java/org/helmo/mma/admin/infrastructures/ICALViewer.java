@@ -16,6 +16,7 @@ import org.helmo.mma.admin.domains.core.User;
 import org.helmo.mma.admin.domains.exceptions.CalendarException;
 
 import java.io.*;
+import java.net.SocketException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
@@ -39,12 +40,9 @@ public class ICALViewer implements CalendarRepository {
         var directory = Paths.get(path);
         this.pathFile = path;
         try (var inputS = Files.newInputStream(directory)){
-            var v = Files.notExists(directory);
             var builder = new CalendarBuilder();
             this.calendar = builder.build(inputS);
             this.calendar.add(ImmutableVersion.VERSION_2_0);
-
-
         } catch (IOException | ParserException e) {
             throw new CalendarException(e.getMessage());
         }
@@ -54,13 +52,13 @@ public class ICALViewer implements CalendarRepository {
     @Override
     public void writeTo(Booking booking, User user) {
         var bookingDto = new BookingDTO(booking);
-        ZonedDateTime debut = bookingDto.getDebut();
-        ZonedDateTime fin = bookingDto.getFin();
-        VEvent event = parseVEvent(bookingDto, user, debut, fin);
+
+        if(booking.JourReservation().isBefore(LocalDate.now())) {
+            return; //On sort de la méthode car on veut écrire à une date antérieur
+        }
 
         try(var fos = Files.newOutputStream(Paths.get(pathFile))) {
-            UidGenerator uidGenerator = new FixedUidGenerator(bookingDto.getSalle()+"-"+bookingDto.getMatricule());
-            event.add(uidGenerator.generateUid());
+            VEvent event = parseVEvent(bookingDto, user, bookingDto.getDebut(), bookingDto.getFin());
             calendar.add(event);
             var outputter = new CalendarOutputter();
             outputter.output(calendar, fos);
@@ -71,13 +69,16 @@ public class ICALViewer implements CalendarRepository {
 
     }
 
-    private static VEvent parseVEvent(BookingDTO booking, User user, ZonedDateTime debut, ZonedDateTime fin) {
+    private static VEvent parseVEvent(BookingDTO booking, User user, ZonedDateTime debut, ZonedDateTime fin) throws SocketException {
         VEvent event = new VEvent(debut, fin, booking.getDescription());
         Organizer attendee = new Organizer(user.Nom()+"_"+ user.Prenom()+"_"+ booking.getMatricule()+"_"+user.Email());
         Location salle = new Location(booking.getSalle());
+        Summary summary = new Summary(booking.getDescription());
+        UidGenerator uidGenerator = new FixedUidGenerator(booking.getSalle()+"-"+booking.getMatricule());
+        event.add(uidGenerator.generateUid());
         event.add(salle);
         event.add(attendee);
-
+        event.add(summary);
         return event;
     }
 
@@ -106,6 +107,11 @@ public class ICALViewer implements CalendarRepository {
         return events;
     }
 
+    /**
+     * @param id
+     * @param givenTime
+     * @return
+     */
     @Override
     public LocalEvent getBooking(String id, LocalTime givenTime) {
         LocalEvent result = null;

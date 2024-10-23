@@ -11,9 +11,9 @@ import org.helmo.mma.admin.domains.core.LocalEvent;
 import org.helmo.mma.admin.domains.rooms.CanReadRooms;
 import org.helmo.mma.admin.domains.users.CanReadUsers;
 
-import java.nio.file.Files;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,29 +55,34 @@ public class MainPresenter implements BookingPresenter {
     @Override
     public void writeEventRequest(String request) {
         var allValues = request.split(", ");
-        Booking booking = new Booking(allValues[0], allValues[1], LocalDate.parse(allValues[2]), LocalTime.parse(allValues[3]), LocalTime.parse(allValues[4]), allValues[5], Integer.parseInt(allValues[6]));
+        var formatter = DateTimeFormatter.ofPattern("H:mm");
+        Booking booking = new Booking(allValues[0], allValues[1], LocalDate.parse(allValues[2]), LocalTime.parse(allValues[3],formatter), LocalTime.parse(allValues[4],formatter), allValues[5], Integer.parseInt(allValues[6]));
 
-        if (checkIfNotValid(booking)) return;
+        if (checkIfNotValid(booking)) {
+            return;
+        }
 
         var bookerUser = usersRepo.getUser(booking.Matricule());
         calendarRepository.writeTo(booking,bookerUser);
     }
 
     private boolean checkIfNotValid(Booking booking) {
-        if(!usersRepo.exists(booking.Matricule())){
-            view.displayError("Objet non trouvé");
-            return true;
-        }
-        if(booking.NbPersonnes() > roomsRepo.getRoom(booking.IdSalle()).Size()){
-            view.displayError("Capacité insuffisante");
-            return true;
-        }
         var collision = calendarRepository.getBookingsBy(booking.IdSalle(), booking.JourReservation())
                 .stream().anyMatch(ev -> ev.Debut().isBefore(booking.Fin()) && booking.Debut().isBefore(ev.Fin()) );
         if(collision){
             view.displayError("Crénau occupé");
             return true;
         }
+        if(booking.NbPersonnes() > roomsRepo.getRoom(booking.IdSalle()).Size()){
+            view.displayError("Capacité insuffisante");
+            return true;
+        }
+        if(!usersRepo.exists(booking.Matricule())){
+            view.displayError("Utilisateur non trouvé");
+            return true;
+        }
+
+
         return false;
     }
 
@@ -119,7 +124,6 @@ public class MainPresenter implements BookingPresenter {
         }
 
         view.displayAvailable(evs);
-
     }
 
 
