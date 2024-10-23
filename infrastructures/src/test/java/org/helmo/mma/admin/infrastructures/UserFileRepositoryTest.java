@@ -26,7 +26,7 @@ class UserFileRepositoryTest {
         buildFile("");
         var userReader = new UserFileRepository("");
         UserException userException = assertThrows(UserException.class,userReader::getUsers);
-        assertEquals(userException.getMessage(),"UserException Aucun fichier utilisateur");
+        assertEquals(userException.getMessage(),"UserException -> Aucun fichier utilisateur");
     }
 
     @Test

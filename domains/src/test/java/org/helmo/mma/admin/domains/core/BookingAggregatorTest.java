@@ -28,7 +28,7 @@ class BookingAggregatorTest {
     }
 
     @Test
-    void testConstructorShouldNotAcceptNullDependencies() {
+    void shouldNotAcceptNullDependencies() {
         assertThrows(NullPointerException.class, () -> {
             new BookingAggregator(mockRoomsRepo, mockUsersRepo, null);
         });
@@ -43,7 +43,7 @@ class BookingAggregatorTest {
     }
 
     @Test
-    void testConstructorShouldInitializeDependencies() {
+    void shouldInitializeDependencies() {
         aggregator = new BookingAggregator(mockRoomsRepo, mockUsersRepo, mockCalendarRepo);
 
         assertNotNull(aggregator.getRoomsRepo());

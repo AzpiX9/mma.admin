@@ -1,5 +1,6 @@
 package org.helmo.mma.admin.domains.core;
 
+import org.helmo.mma.admin.domains.exceptions.BookingException;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -26,7 +27,7 @@ class BookingTest {
     }
 
     @Test
-    public void two_records_should_be_equals() {
+    public void should_return_true_two_records_should_be_equals() {
         LocalDate date = LocalDate.of(2024, 10, 22);
         LocalTime startTime = LocalTime.of(14, 0);
         LocalTime endTime = LocalTime.of(16, 0);
@@ -57,7 +58,7 @@ class BookingTest {
         LocalTime startTime = LocalTime.of(14, 0);
         LocalTime endTime = LocalTime.of(16, 0);
 
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(BookingException.class, () -> {
             new Booking("LB1", "B23456", date, startTime, endTime, "Réunion de travail", -5);
         });
     }

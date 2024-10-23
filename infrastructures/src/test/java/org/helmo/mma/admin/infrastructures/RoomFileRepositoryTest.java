@@ -25,7 +25,7 @@ class RoomFileRepositoryTest {
         buildFile("");
         var roomReader = new RoomFileRepository("");
         RoomException roomException = assertThrows(RoomException.class,roomReader::getRooms);
-        assertEquals(roomException.getMessage(),"RoomException Aucune salle n'est disponible");
+        assertEquals(roomException.getMessage(),"RoomException -> Aucune salle n'est disponible");
     }
 
     @Test
@@ -65,7 +65,7 @@ class RoomFileRepositoryTest {
         var idGiven = "L5";
 
         var roomException = assertThrows(RoomException.class,() -> roomReader.getRoom(idGiven));
-        assertEquals("RoomException Aucune salle n'est trouvé",roomException.getMessage());
+        assertEquals("RoomException -> Aucune salle n'est trouvé",roomException.getMessage());
 
     }
 
