@@ -95,8 +95,10 @@ public class ICALViewer implements CalendarRepository {
                     events.add(localEvent);
                 }
             }
-        } catch (IOException | ParserException e) {
-            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new CalendarException("Ce calendrier n'existe pas");
+        } catch (ParserException e) {
+            throw new CalendarException("Les composants sont invalides");
         }
 
     }
