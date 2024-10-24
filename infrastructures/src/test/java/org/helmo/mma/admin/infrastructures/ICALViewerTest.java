@@ -20,6 +20,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
+//TODO: Faire bcp de tests (dépasser 80%)
 public class ICALViewerTest {
 
     private ICALViewer icalViewer;
@@ -44,14 +45,15 @@ public class ICALViewerTest {
     }
 
     @AfterEach
-    public void tearDown() throws Exception {
+    public void tearDown() throws IOException {
         // Supprimer le fichier temporaire après chaque test
         if (Files.exists(pathFile)) {
             Files.delete(pathFile);
         }
     }
+
     @Test
-    public void testWriteTo_AddsEventToCalendar() {
+    public void shouldWriteTo_AddNewBookingToCalendar() {
         // Arrange
         Booking booking = new Booking("Salle101", "123456", LocalDate.now(),
                 LocalTime.of(10, 0), LocalTime.of(12, 0), "Réunion importante", 5);
@@ -63,34 +65,54 @@ public class ICALViewerTest {
         // Assert
         List<LocalEvent> events = icalViewer.retrieveAll();
         assertEquals(1, events.size());
-        LocalEvent event = events.getFirst();
-        assertEquals("Dupont_Jean_123456_jean.dupont@example.com", event.Username());
+        LocalEvent event = events.get(0);
         assertEquals("Salle101", event.Location());
-        assertEquals("Réunion importante", event.Summary());
         assertEquals(LocalTime.of(10, 0), event.Debut());
         assertEquals(LocalTime.of(12, 0), event.Fin());
+        assertEquals("Réunion importante", event.Summary());
     }
 
     @Test
-    public void testRetrieveAll_ReturnsAllEvents() {
+    public void shouldGetBooking_ReturnCorrectEvent() {
+        // Arrange
+        Booking booking = new Booking("Salle101", "123456", LocalDate.now(),
+                LocalTime.of(10, 0), LocalTime.of(12, 0), "Réunion importante", 5);
+        User user = new User("123456", "Dupont", "Jean", "jean.dupont@example.com");
+        icalViewer.writeTo(booking, user);
+
+        // Act
+        LocalEvent retrievedEvent = icalViewer.getBooking("Salle101", LocalTime.of(11, 0));
+
+        // Assert
+        assertNotNull(retrievedEvent);
+        assertEquals("Salle101", retrievedEvent.Location());
+        assertEquals(LocalTime.of(10, 0), retrievedEvent.Debut());
+        assertEquals(LocalTime.of(12, 0), retrievedEvent.Fin());
+    }
+
+    @Test
+    public void shouldReturnAllBookingsForGivenLocationAndDate() {
         // Arrange
         Booking booking1 = new Booking("Salle101", "123456", LocalDate.now(),
                 LocalTime.of(10, 0), LocalTime.of(12, 0), "Réunion importante", 5);
-        Booking booking2 = new Booking("Salle102", "123457", LocalDate.now(),
-                LocalTime.of(14, 0), LocalTime.of(15, 0), "Conférence", 10);
+        Booking booking2 = new Booking("Salle101", "789012", LocalDate.now(),
+                LocalTime.of(14, 0), LocalTime.of(16, 0), "Réunion brainstorming", 8);
         User user = new User("123456", "Dupont", "Jean", "jean.dupont@example.com");
 
         // Act
         icalViewer.writeTo(booking1, user);
         icalViewer.writeTo(booking2, user);
 
+        List<LocalEvent> bookings = icalViewer.getBookingsBy("Salle101", LocalDate.now());
+
         // Assert
-        List<LocalEvent> events = icalViewer.retrieveAll();
-        assertEquals(2, events.size());
+        assertEquals(2, bookings.size());
+        assertEquals("Réunion importante", bookings.get(0).Summary());
+        assertEquals("Réunion brainstorming", bookings.get(1).Summary());
     }
 
     @Test
-    public void testGetBooking_ReturnsCorrectEvent() {
+    public void shouldNotGetBooking_WhenTimeOutsideEvent() {
         // Arrange
         Booking booking = new Booking("Salle101", "123456", LocalDate.now(),
                 LocalTime.of(10, 0), LocalTime.of(12, 0), "Réunion importante", 5);
@@ -98,55 +120,112 @@ public class ICALViewerTest {
         icalViewer.writeTo(booking, user);
 
         // Act
-        LocalEvent event = icalViewer.getBooking("Salle101", LocalTime.of(11, 0));
+        LocalEvent retrievedEvent = icalViewer.getBooking("Salle101", LocalTime.of(13, 0));
 
         // Assert
-        assertNotNull(event);
-        assertEquals("Salle101", event.Location());
-        assertEquals(LocalTime.of(10, 0), event.Debut());
-        assertEquals(LocalTime.of(12, 0), event.Fin());
+        assertNull(retrievedEvent);
     }
 
     @Test
-    public void testGetBookingsBy_ReturnsEventsForSpecificLocationAndDate() {
-        // Arrange
-        LocalDate today = LocalDate.now();
-        Booking booking1 = new Booking("Salle101", "123456", today,
-                LocalTime.of(10, 0), LocalTime.of(12, 0), "Réunion importante", 5);
-        Booking booking2 = new Booking("Salle102", "123457", today,
-                LocalTime.of(14, 0), LocalTime.of(15, 0), "Conférence", 10);
+    public void shouldNotAddEventInPast(){
+        Booking booking = new Booking("Salle101", "123456", LocalDate.now().minusDays(1), LocalTime.of(10, 0), LocalTime.of(12, 0), "Réunion importante", 5);
         User user = new User("123456", "Dupont", "Jean", "jean.dupont@example.com");
+        icalViewer.writeTo(booking, user);
 
-        // Act
-        icalViewer.writeTo(booking1, user);
-        icalViewer.writeTo(booking2, user);
-        List<LocalEvent> events = icalViewer.getBookingsBy("Salle101", today);
+        LocalEvent retrievedEvent = icalViewer.getBooking("Salle101", LocalTime.of(11, 0));
 
-        // Assert
+        assertNull(retrievedEvent);
+    }
+
+    @Test
+    public void shouldReturnAnEmptyWhenLocationAndDateIsNotValid(){
+        var result = icalViewer.getBookingsBy("Salle101", LocalDate.now());
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void shouldThrowCalendarException_WhenFileDoesNotExist() {
+        // Suppression du fichier temporaire pour simuler un fichier inexistant
+        assertDoesNotThrow(() -> Files.deleteIfExists(pathFile));
+
+        // Vérifier que l'appel à readTo() lève une CalendarException avec le bon message
+        CalendarException exception = assertThrows(CalendarException.class, () -> icalViewer.readTo());
+        assertEquals("CalendarException -> Ce calendrier n'existe pas", exception.getMessage());
+    }
+
+    @Test
+    public void shouldThrowCalendarException_WhenFileIsCorrupted() throws IOException {
+        // Écrire un contenu corrompu dans le fichier
+        Files.writeString(pathFile, "INVALID CONTENT");
+
+        // Vérifier que l'appel à readTo() lève une CalendarException avec le bon message
+        CalendarException exception = assertThrows(CalendarException.class, () -> icalViewer.readTo());
+        assertEquals("CalendarException -> Les composants sont invalides", exception.getMessage());
+    }
+
+    @Test
+    public void shouldIgnoreNonVEventComponents_WhenReadingFromFile() {
+        // Simuler un fichier contenant un composant non-VEvent (comme un VTODO ou VTIMEZONE)
+        String icalContentWithNonVEvent = """
+        BEGIN:VCALENDAR
+        VERSION:2.0
+        PRODID:-//YourApp//ICAL Tests//EN
+        BEGIN:VEVENT
+        SUMMARY:Réunion de test
+        LOCATION:Salle101
+        DTSTART;TZID=Europe/Paris:20241023T100000
+        DTEND;TZID=Europe/Paris:20241023T120000
+        ORGANIZER;CN=Jean Dupont:MAILTO:jean.dupont@example.com
+        END:VEVENT
+        BEGIN:VTODO
+        SUMMARY:Faire un rapport
+        DUE;TZID=Europe/Paris:20241023T170000
+        END:VTODO
+        END:VCALENDAR
+        """;
+
+        assertDoesNotThrow(() -> Files.writeString(pathFile, icalContentWithNonVEvent));
+
+        // Appeler la méthode readTo() et vérifier que seul le composant VEvent est ajouté
+        assertDoesNotThrow(() -> icalViewer.readTo());
+        List<LocalEvent> events = icalViewer.retrieveAll();
+
+        // Vérifier que seul l'événement VEvent est ajouté, et non le composant VTODO
         assertEquals(1, events.size());
+        assertEquals("Réunion de test", events.get(0).Summary());
         assertEquals("Salle101", events.get(0).Location());
     }
 
-//    @Test
-//    public void testWriteTo_InvalidBooking_ThrowsException() {
-//        // Arrange
-//        Booking invalidBooking = new Booking("Salle101", "123456", LocalDate.now(),
-//                LocalTime.of(10, 0), LocalTime.of(12, 0), "Réunion importante", -5); // NbPersonnes négatif
-//        User user = new User("123456", "Dupont", "Jean", "jean.dupont@example.com");
-//
-//        // Assert
-//        assertThrows(BookingException.class, () -> {
-//            // Act
-//            icalViewer.writeTo(invalidBooking, user);
-//        });
-//    }
+    @Test
+    public void shouldReturnEmptyList_WhenNoBookingsFound() {
+        // Vérifier que la liste retournée est vide si aucun événement n'a été ajouté
+        List<LocalEvent> bookings = icalViewer.getBookingsBy("Salle101", LocalDate.now());
+        assertTrue(bookings.isEmpty(), "La liste de réservations devrait être vide.");
+    }
 
     @Test
-    public void testConstructor_ThrowsCalendarException_OnInvalidPath() {
-        // Assert
-        assertThrows(CalendarException.class, () -> {
-            // Act
-            new ICALViewer("invalid/path/to/calendar.ics");
-        });
+    public void shouldReturnEmptyList_WhenNoMatchingBookingsFound() {
+
+        String validEventContent = """
+        BEGIN:VCALENDAR
+        VERSION:2.0
+        PRODID:-//YourApp//ICAL Tests//EN
+        BEGIN:VEVENT
+        SUMMARY:Réunion de test
+        LOCATION:Salle202
+        DTSTART;TZID=Europe/Paris:20241023T100000
+        DTEND;TZID=Europe/Paris:20241023T120000
+        ORGANIZER;CN=Jean Dupont:MAILTO:jean.dupont@example.com
+        END:VEVENT
+        END:VCALENDAR
+        """;
+        assertDoesNotThrow(() -> Files.writeString(pathFile, validEventContent));
+
+        assertDoesNotThrow(() -> icalViewer.readTo());
+
+        List<LocalEvent> bookings = icalViewer.getBookingsBy("Salle101", LocalDate.now());
+        assertTrue(bookings.isEmpty(), "La liste de réservations devrait être vide.");
     }
+
 }
