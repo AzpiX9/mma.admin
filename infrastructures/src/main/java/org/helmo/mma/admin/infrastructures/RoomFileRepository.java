@@ -1,0 +1,55 @@
+/*
+ * This source file is an example
+ */
+package org.helmo.mma.admin.infrastructures;
+
+import org.helmo.mma.admin.domains.core.Room;
+import org.helmo.mma.admin.domains.exceptions.RoomException;
+import org.helmo.mma.admin.domains.rooms.CanReadRooms;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Lecteur de fichiers CSV des salles (rooms)
+ */
+public class RoomFileRepository implements CanReadRooms {
+
+    private final String filePath;
+    private List<Room> rooms = new ArrayList<>();
+
+    public RoomFileRepository(String path) {
+        filePath = path;
+    }
+
+    @Override
+    public List<Room> getRooms() {
+        rooms.clear();
+        try(BufferedReader br = Files.newBufferedReader(Path.of(filePath))) {
+            String line;
+            while ((line = br.readLine()) != null){
+                var values = line.split(";");
+                rooms.add(new Room(values[0],values[1],Integer.parseInt(values[2])));
+            }
+
+        } catch (IOException e) {
+            throw new RoomException("Aucune salle n'est disponible");
+        }
+
+        return rooms;
+    }
+
+    @Override
+    public Room getRoom(String roomId) {
+        return getRooms()
+                .stream()
+                .filter(room -> room.Id().equals(roomId))
+                .findFirst().orElseThrow(() -> new RoomException("Aucune salle n'est trouvé"));
+    }
+
+
+}

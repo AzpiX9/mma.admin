@@ -10,5 +10,5 @@ plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
 }
 
-rootProject.name = 'ai-java-stub'
+rootProject.name = 'mma.admin'
 include('app', 'views', 'presentations', 'domains', 'infrastructures')
