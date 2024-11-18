@@ -156,9 +156,9 @@ public class CLIView implements MainView, AutoCloseable {
         var organizer = values[4].split("_");
 
         System.out.println("\nSalle : "+room[0]+" (Capacité. "+room[1]+")"); //nom de la salle et sa capacité
-        System.out.println(String.format("%s, de %s à %s",values[1],values[2],values[3])); //date, crénau
-        System.out.println(String.format("Description : %s",values[5]));
-        System.out.println(String.format("Responsable : %s (%s, %s)\n",organizer[0]+" "+organizer[1],organizer[2],organizer[3]));
+        System.out.printf("%s, de %s à %s%n",values[1],values[2],values[3]); //date, crénau
+        System.out.printf("Description : %s%n",values[5]);
+        System.out.printf("Responsable : %s (%s, %s)\n%n",organizer[0]+" "+organizer[1],organizer[2],organizer[3]);
     }
 
     /**
