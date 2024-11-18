@@ -22,17 +22,14 @@ public class Program {
         if(!validGivenArgs(args)){
             throw new DirException("Valeur invalide ou manquante");
         }
-
-        var argAddr = "192.168.132.200:13306;user=Q210138;password=0138";
-        var connValues = argAddr.split(";");
+        var connValues = path.split(";");
         var jdbc = String.format("jdbc:mysql://%s/Q210138?%s&%s",connValues[0],connValues[1],connValues[2]);
         BookingAggregator aggregator = null;
-
 
         try {
             var roomRepository = new RoomDbRepository(DriverManager.getConnection(jdbc));
             var userRepository = new UserDbRepository(DriverManager.getConnection(jdbc));
-            var calendarRepository = new ICALViewer(path+"\\Event.ics");
+            var calendarRepository = new CalDbRepository(DriverManager.getConnection(jdbc));
             aggregator = new BookingAggregator(roomRepository, userRepository, calendarRepository);
 
         }catch (SQLException e){
@@ -71,7 +68,7 @@ public class Program {
     private static OptionSet parsingOpts(String[] args) {
         OptionParser parser = new OptionParser();
         parser.accepts("db").withRequiredArg();
-        var arg = args[0].split("=");
+        var arg = args[0].split("=",2);
         var opts = parser.parse(arg);
         path = opts.valueOf("db").toString();
         return opts;
