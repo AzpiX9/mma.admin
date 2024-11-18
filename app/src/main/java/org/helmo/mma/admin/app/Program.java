@@ -57,17 +57,15 @@ public class Program {
         }
 
         var opts = parsingOpts(args);
-        return opts.has("dir")
-                && Files.exists(Paths.get(path,"rooms.csv"))
-                && Files.exists(Paths.get(path,"users.csv"));
+        return opts.has("db");
     }
 
     private static OptionSet parsingOpts(String[] args) {
         OptionParser parser = new OptionParser();
-        parser.accepts("dir").withRequiredArg();
+        parser.accepts("db").withRequiredArg();
         var arg = args[0].split("=");
         var opts = parser.parse(arg);
-        path = opts.valueOf("dir").toString();
+        path = opts.valueOf("db").toString();
         return opts;
     }
 }
