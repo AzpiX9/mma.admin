@@ -7,15 +7,13 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import org.helmo.mma.admin.domains.core.BookingAggregator;
 import org.helmo.mma.admin.domains.exceptions.DirException;
-import org.helmo.mma.admin.infrastructures.ICALViewer;
-import org.helmo.mma.admin.infrastructures.RoomFileRepository;
-import org.helmo.mma.admin.infrastructures.UserFileRepository;
+import org.helmo.mma.admin.infrastructures.*;
 import org.helmo.mma.admin.presentations.MainPresenter;
 import org.helmo.mma.admin.views.CLIView;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 public class Program {
     private static String path = "";
@@ -25,11 +23,21 @@ public class Program {
             throw new DirException("Valeur invalide ou manquante");
         }
 
-        var roomRepository = new RoomFileRepository(path+"\\rooms.csv");
-        var userRepository = new UserFileRepository(path+"\\users.csv");
-        var calendarRepository = new ICALViewer(path+"\\Event.ics");
+        var argAddr = "192.168.132.200:13306;user=Q210138;password=0138";
+        var connValues = argAddr.split(";");
+        var jdbc = String.format("jdbc:mysql://%s/Q210138?%s&%s",connValues[0],connValues[1],connValues[2]);
+        BookingAggregator aggregator = null;
 
-        var aggregator = new BookingAggregator(roomRepository, userRepository, calendarRepository);
+
+        try {
+            var roomRepository = new RoomDbRepository(DriverManager.getConnection(jdbc));
+            var userRepository = new UserDbRepository(DriverManager.getConnection(jdbc));
+            var calendarRepository = new ICALViewer(path+"\\Event.ics");
+            aggregator = new BookingAggregator(roomRepository, userRepository, calendarRepository);
+
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
 
         try(var view = new CLIView(System.in,System.out)){
             var mainPresenter = new MainPresenter(view,aggregator);
@@ -43,11 +51,11 @@ public class Program {
     /**
      * Vérifie si les arguments reçus sont valides
      * @param args
-     * @return true si l'argument reçu correspond à un chemin existant et que les 2 fichiers existent sinon false
+     * @return true si l'argument reçu est valide sinon false
      */
     private static boolean validGivenArgs(String[] args) {
         if(args.length < 1) {
-            System.err.println("Argument requis dir manquant ou incorrect");
+            System.err.println("Argument requis db manquant ou incorrect");
             return false;
         }
 
