@@ -19,10 +19,7 @@ import java.io.*;
 import java.net.SocketException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -95,9 +92,7 @@ public class ICALViewer implements CalendarRepository {
                     events.add(localEvent);
                 }
             }
-        } catch (IOException e) {
-            throw new CalendarException("Ce calendrier n'existe pas");
-        } catch (ParserException e) {
+        }catch (ParserException | IOException e) {
             throw new CalendarException("Les composants sont invalides");
         }
 
@@ -115,8 +110,9 @@ public class ICALViewer implements CalendarRepository {
      * @return
      */
     @Override
-    public LocalEvent getBooking(String id, LocalTime givenTime) {
+    public LocalEvent getBooking(String id, LocalDateTime givenTime) {
         LocalEvent result = null;
+
         for(var event : retrieveAll()) {
             if(event.Location().equals(id) && isBetweenTime(event,givenTime)) {
                 result = event;
@@ -133,9 +129,13 @@ public class ICALViewer implements CalendarRepository {
                 .toList();
     }
 
-    private boolean isBetweenTime(LocalEvent event, LocalTime crenau) {
-        return (crenau.equals(event.Debut()) || crenau.equals(event.Fin())) ||
-                (crenau.isAfter(event.Debut()) && crenau.isBefore(event.Fin()));
+    private boolean isBetweenTime(LocalEvent event, LocalDateTime crenau) {
+
+        var eventReferenceStart = LocalDateTime.of(event.DateJour(),event.Debut());
+        var eventReferenceEnd = LocalDateTime.of(event.DateJour(),event.Fin());
+        return (crenau.equals(eventReferenceStart))
+                || (crenau.isAfter(eventReferenceStart)
+                && crenau.isBefore(eventReferenceEnd));
     }
 
     /**
