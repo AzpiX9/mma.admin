@@ -12,6 +12,7 @@ import org.helmo.mma.admin.domains.rooms.CanReadRooms;
 import org.helmo.mma.admin.domains.users.CanReadUsers;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -64,6 +65,7 @@ public class MainPresenter implements BookingPresenter {
 
         var bookerUser = usersRepo.getUser(booking.Matricule());
         calendarRepository.writeTo(booking,bookerUser);
+        view.displayMessage("Évenement crée avec succès");
     }
 
     private boolean checkIfNotValid(Booking booking) {
@@ -89,7 +91,8 @@ public class MainPresenter implements BookingPresenter {
     @Override
     public void viewRequest(String request) {
         var values = request.split(", ");
-        var bookedFound = calendarRepository.getBooking(values[1], LocalTime.parse(values[2]));
+        var givenDT = LocalDateTime.of(LocalDate.parse(values[0]),LocalTime.parse(values[2]));
+        var bookedFound = calendarRepository.getBooking(values[1], givenDT);
 
         if(bookedFound == null){
             view.displayError("Aucune correspondance trouvée");
