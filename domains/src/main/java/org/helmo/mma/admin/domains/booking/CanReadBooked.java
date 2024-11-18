@@ -3,6 +3,7 @@ package org.helmo.mma.admin.domains.booking;
 import org.helmo.mma.admin.domains.core.LocalEvent;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -11,7 +12,7 @@ public interface CanReadBooked {
 
     List<LocalEvent> retrieveAll();
 
-    LocalEvent getBooking(String id, LocalTime time);
+    LocalEvent getBooking(String id, LocalDateTime slotDT);
 
     List<LocalEvent> getBookingsBy(String location, LocalDate date);
 }
