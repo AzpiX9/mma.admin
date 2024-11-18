@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -80,8 +81,9 @@ public class ICALViewerTest {
         User user = new User("123456", "Dupont", "Jean", "jean.dupont@example.com");
         icalViewer.writeTo(booking, user);
 
+
         // Act
-        LocalEvent retrievedEvent = icalViewer.getBooking("Salle101", LocalTime.of(11, 0));
+        LocalEvent retrievedEvent = icalViewer.getBooking("Salle101", LocalDateTime.of(LocalDate.now(),LocalTime.of(11, 0)));
 
         // Assert
         assertNotNull(retrievedEvent);
@@ -120,7 +122,7 @@ public class ICALViewerTest {
         icalViewer.writeTo(booking, user);
 
         // Act
-        LocalEvent retrievedEvent = icalViewer.getBooking("Salle101", LocalTime.of(13, 0));
+        LocalEvent retrievedEvent = icalViewer.getBooking("Salle101", LocalDateTime.of(LocalDate.now(),LocalTime.of(13, 0)));
 
         // Assert
         assertNull(retrievedEvent);
@@ -132,7 +134,7 @@ public class ICALViewerTest {
         User user = new User("123456", "Dupont", "Jean", "jean.dupont@example.com");
         icalViewer.writeTo(booking, user);
 
-        LocalEvent retrievedEvent = icalViewer.getBooking("Salle101", LocalTime.of(11, 0));
+        LocalEvent retrievedEvent = icalViewer.getBooking("Salle101", LocalDateTime.of(LocalDate.now(),LocalTime.of(11, 0)));
 
         assertNull(retrievedEvent);
     }
