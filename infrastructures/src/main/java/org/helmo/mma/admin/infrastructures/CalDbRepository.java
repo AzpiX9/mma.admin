@@ -5,10 +5,7 @@ import org.helmo.mma.admin.domains.core.Booking;
 import org.helmo.mma.admin.domains.core.LocalEvent;
 import org.helmo.mma.admin.domains.core.User;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -83,6 +80,21 @@ public class CalDbRepository implements CalendarRepository {
 
     @Override
     public void writeTo(Booking booking, User user) {
+        var sql = "INSERT INTO Reservation(salle,matricule,jourReservation,debut,fin,description,nbPersonnes) VALUES (?,?,?,?,?,?,?) ";
+        try(var stmt = connection.prepareStatement(sql)) {
+            //TODO: vérifier si les indexs correspondent
+            stmt.setString(1, booking.IdSalle());
+            stmt.setString(2, user.Matricule());
+            stmt.setDate(3, Date.valueOf(booking.JourReservation()));
+            stmt.setTime(4, Time.valueOf(booking.Debut()));
+            stmt.setTime(5, Time.valueOf(booking.Fin()));
+            stmt.setString(6, booking.Description());
+            stmt.setInt(7, booking.NbPersonnes());
 
+            stmt.executeUpdate();
+
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
     }
 }
