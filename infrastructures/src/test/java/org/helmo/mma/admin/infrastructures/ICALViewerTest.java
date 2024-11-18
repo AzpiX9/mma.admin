@@ -3,13 +3,11 @@ package org.helmo.mma.admin.infrastructures;
 import org.helmo.mma.admin.domains.core.Booking;
 import org.helmo.mma.admin.domains.core.LocalEvent;
 import org.helmo.mma.admin.domains.core.User;
-import org.helmo.mma.admin.domains.exceptions.BookingException;
 import org.helmo.mma.admin.domains.exceptions.CalendarException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -66,7 +64,7 @@ public class ICALViewerTest {
         // Assert
         List<LocalEvent> events = icalViewer.retrieveAll();
         assertEquals(1, events.size());
-        LocalEvent event = events.get(0);
+        LocalEvent event = events.getFirst();
         assertEquals("Salle101", event.Location());
         assertEquals(LocalTime.of(10, 0), event.Debut());
         assertEquals(LocalTime.of(12, 0), event.Fin());
@@ -195,8 +193,8 @@ public class ICALViewerTest {
 
         // Vérifier que seul l'événement VEvent est ajouté, et non le composant VTODO
         assertEquals(1, events.size());
-        assertEquals("Réunion de test", events.get(0).Summary());
-        assertEquals("Salle101", events.get(0).Location());
+        assertEquals("Réunion de test", events.getFirst().Summary());
+        assertEquals("Salle101", events.getFirst().Location());
     }
 
     @Test
