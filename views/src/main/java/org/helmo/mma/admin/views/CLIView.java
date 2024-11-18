@@ -5,6 +5,7 @@ import org.helmo.mma.admin.presentations.MainView;
 
 import java.io.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -192,6 +193,11 @@ public class CLIView implements MainView, AutoCloseable {
             System.out.println(ev);
         }
         System.out.println();
+    }
+
+    @Override
+    public void displayMessage(String message) {
+        System.out.println(LocalDateTime.now()+": "+message);
     }
 
 
