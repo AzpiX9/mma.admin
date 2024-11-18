@@ -15,4 +15,6 @@ public interface MainView {
     void displayByLocalEvs(String name, List<String> elems);
 
     void displayAvailable(List<String> evs);
+
+    void displayMessage(String message);
 }
