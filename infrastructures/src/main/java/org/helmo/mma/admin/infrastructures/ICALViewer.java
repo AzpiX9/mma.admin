@@ -55,7 +55,7 @@ public class ICALViewer implements CalendarRepository {
         }
 
         try(var fos = Files.newOutputStream(Paths.get(pathFile))) {
-            VEvent event = parseVEvent(bookingDto, user, bookingDto.getDebut(), bookingDto.getFin());
+            VEvent event = parseVEvent(bookingDto, user, bookingDto.Debut(), bookingDto.Fin());
             calendar.add(event);
             var outputter = new CalendarOutputter();
             outputter.output(calendar, fos);
@@ -67,11 +67,11 @@ public class ICALViewer implements CalendarRepository {
     }
 
     private static VEvent parseVEvent(BookingDTO booking, User user, ZonedDateTime debut, ZonedDateTime fin) throws SocketException {
-        VEvent event = new VEvent(debut, fin, booking.getDescription());
-        Organizer attendee = new Organizer(user.Nom()+"_"+ user.Prenom()+"_"+ booking.getMatricule()+"_"+user.Email());
-        Location salle = new Location(booking.getSalle());
-        Summary summary = new Summary(booking.getDescription());
-        UidGenerator uidGenerator = new FixedUidGenerator(booking.getSalle()+"-"+booking.getMatricule());
+        VEvent event = new VEvent(debut, fin, booking.Description());
+        Organizer attendee = new Organizer(user.Nom()+"_"+ user.Prenom()+"_"+ booking.Salle()+"_"+user.Email());
+        Location salle = new Location(booking.Salle());
+        Summary summary = new Summary(booking.Description());
+        UidGenerator uidGenerator = new FixedUidGenerator(booking.Salle()+"-"+booking.Matricule());
         event.add(uidGenerator.generateUid());
         event.add(salle);
         event.add(attendee);
