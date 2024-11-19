@@ -9,7 +9,6 @@ import org.helmo.mma.admin.domains.core.Booking;
 import org.helmo.mma.admin.domains.core.BookingAggregator;
 import org.helmo.mma.admin.domains.core.LocalEvent;
 import org.helmo.mma.admin.domains.rooms.CanReadRooms;
-import org.helmo.mma.admin.domains.users.CanReadUsers;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -22,12 +21,12 @@ public class MainPresenter implements BookingPresenter {
 
     private final MainView view;
     private final CanReadRooms roomsRepo;
-    private final CanReadUsers usersRepo;
     private final CalendarRepository calendarRepository;
+    private final BookingAggregator aggregator;
 
     public MainPresenter(MainView view ,BookingAggregator aggregator) {
         this.roomsRepo = aggregator.getRoomsRepo();
-        this.usersRepo = aggregator.getUsersRepo();
+        this.aggregator = aggregator;
         this.calendarRepository = aggregator.getCalendarRepository();
         this.view = view;
         this.view.setPresenter(this);
@@ -36,21 +35,10 @@ public class MainPresenter implements BookingPresenter {
 
     @Override
     public void seeBookingRequest(LocalDate date) {
-        for (var room : roomsRepo.getRooms()) {
-            var eventByRooms = calendarRepository.getBookingsBy(room.Id(),date);
-
-            view.displayByLocalEvs(room.Id(), transform(eventByRooms));
+        for (var room : aggregator.getRooms()) {
+            var eventByRooms = aggregator.eventsToString(date,room.Id());
+            view.displayByLocalEvs(room.Id(), eventByRooms);
         }
-    }
-
-    private List<String> transform(List<LocalEvent> evs){
-        List<String> times = new ArrayList<>();
-        for (LocalEvent event : evs) {
-            var tempStr = event.Debut()+"-"+event.Fin();
-            times.add(tempStr);
-        }
-
-        return times;
     }
 
     @Override
@@ -59,34 +47,15 @@ public class MainPresenter implements BookingPresenter {
         var formatter = DateTimeFormatter.ofPattern("H:mm");
         Booking booking = new Booking(allValues[0], allValues[1], LocalDate.parse(allValues[2]), LocalTime.parse(allValues[3],formatter), LocalTime.parse(allValues[4],formatter), allValues[5], Integer.parseInt(allValues[6]));
 
-        if (checkIfNotValid(booking)) {
+        if (!aggregator.checkIfNotValid(booking).isEmpty()) {
             return;
         }
 
-        var bookerUser = usersRepo.getUser(booking.Matricule());
+        var bookerUser = aggregator.getUserFromMatricule(booking.Matricule());
         calendarRepository.writeTo(booking,bookerUser);
         view.displayMessage("Évenement crée avec succès");
     }
 
-    private boolean checkIfNotValid(Booking booking) {
-        var collision = calendarRepository.getBookingsBy(booking.IdSalle(), booking.JourReservation())
-                .stream().anyMatch(ev -> ev.Debut().isBefore(booking.Fin()) && booking.Debut().isBefore(ev.Fin()) );
-        if(collision){
-            view.displayError("Crénau occupé");
-            return true;
-        }
-        if(booking.NbPersonnes() > roomsRepo.getRoom(booking.IdSalle()).Size()){
-            view.displayError("Capacité insuffisante");
-            return true;
-        }
-        if(!usersRepo.exists(booking.Matricule())){
-            view.displayError("Utilisateur non trouvé");
-            return true;
-        }
-
-
-        return false;
-    }
 
     @Override
     public void viewRequest(String request) {
@@ -98,8 +67,10 @@ public class MainPresenter implements BookingPresenter {
             view.displayError("Aucune correspondance trouvée");
             return;
         }
-        var room = roomsRepo.getRoom(values[1]);
-        var userString = bookedFound.Username();
+        var room = roomsRepo.getRoom(bookedFound.Location());
+        var user = aggregator.getUserFromMatricule(bookedFound.Username());
+
+        var userString = String.format("%s_%s_%s_%s",user.Prenom(),user.Nom(),user.Matricule(),user.Email());
 
         view.displayAReservation(
                 room.Name()+"_"+room.Size() +","+bookedFound.DateJour()+","+bookedFound.Debut()
