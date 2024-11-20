@@ -5,7 +5,7 @@ package org.helmo.mma.admin.app;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
-import org.helmo.mma.admin.domains.core.BookingAggregator;
+import org.helmo.mma.admin.infrastructures.BookingAggregator;
 import org.helmo.mma.admin.domains.exceptions.DirException;
 import org.helmo.mma.admin.infrastructures.*;
 import org.helmo.mma.admin.presentations.MainPresenter;
