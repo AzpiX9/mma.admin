@@ -5,5 +5,5 @@ import org.helmo.mma.admin.domains.core.User;
 
 public interface CanWriteBooked {
 
-    void writeTo(Booking booking, User user);
+    void writeTo(Booking booking, User user); //TODO : remplacer USER par le Matricule ou supprimer car dans Booking
 }

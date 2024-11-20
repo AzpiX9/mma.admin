@@ -15,7 +15,7 @@ import java.util.Objects;
 public class CalDbRepository implements CalendarRepository {
 
     private Connection connection;
-    private List<LocalEvent> localEvents;
+    private List<LocalEvent> localEvents = new ArrayList<>();
 
     public CalDbRepository(Connection connection) {
         this.connection = Objects.requireNonNull(connection);
@@ -24,29 +24,31 @@ public class CalDbRepository implements CalendarRepository {
 
     @Override
     public void readTo() {
-        var localEvents = new ArrayList<LocalEvent>();
+        localEvents.clear();
         var query = "SELECT * FROM Reservation";
 
         try (Statement statement = connection.createStatement()) {
             ResultSet resultSet = statement.executeQuery(query);
             while (resultSet.next()) {
-                localEvents.add(new LocalEvent(
-                        resultSet.getString("salle"),
+                var localEventTemp = new LocalEvent(
                         resultSet.getString("matricule"),
+                        resultSet.getString("salle"),
                         resultSet.getDate("jourReservation").toLocalDate(),
                         resultSet.getTime("debut").toLocalTime(),
                         resultSet.getTime("fin").toLocalTime(),
                         resultSet.getString("description")
-                ));
+                );
+                localEvents.add(localEventTemp);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        this.localEvents = localEvents;
+
     }
 
     @Override
     public List<LocalEvent> retrieveAll() {
+        readTo();
         return this.localEvents;
     }
 
@@ -82,7 +84,6 @@ public class CalDbRepository implements CalendarRepository {
     public void writeTo(Booking booking, User user) {
         var sql = "INSERT INTO Reservation(salle,matricule,jourReservation,debut,fin,description,nbPersonnes) VALUES (?,?,?,?,?,?,?) ";
         try(var stmt = connection.prepareStatement(sql)) {
-            //TODO: vérifier si les indexs correspondent
             stmt.setString(1, booking.IdSalle());
             stmt.setString(2, user.Matricule());
             stmt.setDate(3, Date.valueOf(booking.JourReservation()));
@@ -92,6 +93,9 @@ public class CalDbRepository implements CalendarRepository {
             stmt.setInt(7, booking.NbPersonnes());
 
             stmt.executeUpdate();
+            var localEventTemp = new LocalEvent(user.Matricule(),booking.IdSalle(),Date.valueOf(booking.JourReservation()).toLocalDate(),
+                    Time.valueOf(booking.Debut()).toLocalTime(),Time.valueOf(booking.Fin()).toLocalTime(),booking.Description());
+            localEvents.add(localEventTemp);
 
         }catch (SQLException e){
             e.printStackTrace();

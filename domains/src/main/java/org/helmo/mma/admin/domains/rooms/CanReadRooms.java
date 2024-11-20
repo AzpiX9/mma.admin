@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface CanReadRooms {
     List<Room> getRooms();
-    Room getRoom(String roomId);
+    Room getRoom(String roomId); //TODO: déplacer dans un objet métier
 }

@@ -20,16 +20,16 @@ public class UserDbRepository implements CanReadUsers {
     @Override
     public List<User> getUsers() {
         var users = new ArrayList<User>();
-        var query = "SELECT * FROM users";
+        var query = "SELECT * FROM Member";
         try(var stmt = connection.prepareStatement(query)) {
             var rs = stmt.executeQuery();
             while(rs.next()) {
-                var nameSplited = rs.getString("userFullName").split(" ");
+                var nameSplit = rs.getString("userFullName").split(" ");
 
                 users.add(new User(
                         rs.getString("userMatr"),
-                        nameSplited[0],
-                        nameSplited[1],
+                        nameSplit[1],
+                        nameSplit[0],
                         rs.getString("userMail")
                 ));
             }
@@ -41,7 +41,7 @@ public class UserDbRepository implements CanReadUsers {
 
     @Override
     public User getUser(String matricule) {
-        var query = "SELECT * FROM users WHERE userMatr=?";
+        var query = "SELECT * FROM Member WHERE userMatr=?";
         try(var stmt = connection.prepareStatement(query)) {
             stmt.setString(1, matricule);
 
@@ -50,8 +50,8 @@ public class UserDbRepository implements CanReadUsers {
                 var nameSplited = rs.getString("userFullName").split(" ");
                 return new User(
                         rs.getString("userMatr"),
-                        nameSplited[0],
                         nameSplited[1],
+                        nameSplited[0],
                         rs.getString("userMail")
                 );
             }

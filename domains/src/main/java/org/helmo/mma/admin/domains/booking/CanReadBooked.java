@@ -9,9 +9,9 @@ import java.util.List;
 public interface CanReadBooked {
     void readTo();
 
-    List<LocalEvent> retrieveAll();
+    List<LocalEvent> retrieveAll(); //TODO: ajouter une date
 
-    LocalEvent getBooking(String id, LocalDateTime slotDT);
+    LocalEvent getBooking(String idRoom, LocalDateTime slotDT);
 
     List<LocalEvent> getBookingsBy(String location, LocalDate date);
 }

@@ -14,14 +14,12 @@ import java.util.List;
 public class UserFileRepository implements CanReadUsers {
     private final String filePath;
     private final List<User> users = new ArrayList<>();
-    //private final Map<String,User> usersM = new HashMap<>();
 
 
     public UserFileRepository(String path) {
         filePath = path;
     }
 
-    //List ou Map ? pour stocker et récupérer les users
     @Override
     public List<User> getUsers() {
         users.clear();
