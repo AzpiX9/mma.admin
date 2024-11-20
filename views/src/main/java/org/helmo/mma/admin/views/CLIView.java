@@ -155,10 +155,12 @@ public class CLIView implements MainView, AutoCloseable {
         var room = values[0].split("_");
         var organizer = values[4].split("_");
 
+
         System.out.println("\nSalle : "+room[0]+" (Capacité. "+room[1]+")"); //nom de la salle et sa capacité
         System.out.printf("%s, de %s à %s%n",values[1],values[2],values[3]); //date, crénau
         System.out.printf("Description : %s%n",values[5]);
-        System.out.printf("Responsable : %s (%s, %s)\n%n",organizer[0]+" "+organizer[1],organizer[2],organizer[3]);
+        System.out.printf("Responsable : %s (%s, %s)\n",organizer[0]+" "+organizer[1],organizer[2],organizer[3]);
+        System.out.println("Services prévus : saucisse\n");
     }
 
     /**
@@ -190,14 +192,17 @@ public class CLIView implements MainView, AutoCloseable {
     public void displayAvailable(List<String> evs) {
         System.out.printf("%n%5s | %10s | %s | %s |%n","Local", "Date","Heure de début","Heure de Fin");
         for (String ev : evs) {
-            System.out.println(ev);
+            var attributes = ev.split(",");
+            var beginTime = attributes[2].split("-")[0];
+            var endTime = attributes[2].split("-")[1];
+            System.out.printf("%-5s | %10s | %14s | %12s |\n",attributes[0],attributes[1],beginTime,endTime);
         }
         System.out.println();
     }
 
     @Override
     public void displayMessage(String message) {
-        System.out.println(LocalDateTime.now()+": "+message);
+        System.out.printf("%s - %s : %s\n",LocalDate.now(),LocalTime.now(),message);
     }
 
 
