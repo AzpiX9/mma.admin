@@ -1,6 +1,7 @@
 package org.helmo.mma.admin.infrastructures;
 
 import org.helmo.mma.admin.domains.core.Room;
+import org.helmo.mma.admin.domains.exceptions.RoomException;
 import org.helmo.mma.admin.domains.rooms.CanReadRooms;
 
 import java.sql.Connection;
@@ -24,8 +25,7 @@ public class RoomDbRepository implements CanReadRooms {
         var rooms = new ArrayList<Room>();
         var query = "SELECT * FROM Rooms";
 
-        try (Statement statement = connection.createStatement()) {
-            ResultSet resultSet = statement.executeQuery(query);
+        try (Statement statement = connection.createStatement();var resultSet = statement.executeQuery(query)) {
             while (resultSet.next()) {
                 rooms.add(new Room(
                         resultSet.getString("idRoom"),
@@ -44,19 +44,20 @@ public class RoomDbRepository implements CanReadRooms {
     public Room getRoom(String roomId) {
         var query = "SELECT * FROM Rooms WHERE idRoom = ?";
 
-        try(var stmt = connection.prepareStatement(query)) {
+        try (var stmt = connection.prepareStatement(query)) {
             stmt.setString(1, roomId);
-            ResultSet resultSet = stmt.executeQuery();
-            if (resultSet.next()) {
-                return new Room(
-                        resultSet.getString("idRoom"),
-                        resultSet.getString("roomName"),
-                        resultSet.getInt("roomSize")
-                );
+            try (var resultSet = stmt.executeQuery()) {
+                if (resultSet.next()) {
+                    return new Room(
+                            resultSet.getString("idRoom"),
+                            resultSet.getString("roomName"),
+                            resultSet.getInt("roomSize")
+                    );
+                }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RoomException("Room not found");
         }
-        return null;
+        throw new RoomException("Room not found");
     }
 }

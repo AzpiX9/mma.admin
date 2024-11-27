@@ -13,7 +13,7 @@ public class UserDbRepository implements CanReadUsers {
 
     private Connection connection;
 
-    public UserDbRepository(Connection dbUrl){
+    public UserDbRepository(Connection dbUrl) {
         this.connection = Objects.requireNonNull(dbUrl);
     }
 
@@ -21,11 +21,9 @@ public class UserDbRepository implements CanReadUsers {
     public List<User> getUsers() {
         var users = new ArrayList<User>();
         var query = "SELECT * FROM Member";
-        try(var stmt = connection.prepareStatement(query)) {
-            var rs = stmt.executeQuery();
-            while(rs.next()) {
+        try (var stmt = connection.prepareStatement(query); var rs = stmt.executeQuery()) {
+            while (rs.next()) {
                 var nameSplit = rs.getString("userFullName").split(" ");
-
                 users.add(new User(
                         rs.getString("userMatr"),
                         nameSplit[1],
@@ -42,18 +40,18 @@ public class UserDbRepository implements CanReadUsers {
     @Override
     public User getUser(String matricule) {
         var query = "SELECT * FROM Member WHERE userMatr=?";
-        try(var stmt = connection.prepareStatement(query)) {
+        try (var stmt = connection.prepareStatement(query)) {
             stmt.setString(1, matricule);
-
-            var rs = stmt.executeQuery();
-            if(rs.next()) {
-                var nameSplited = rs.getString("userFullName").split(" ");
-                return new User(
-                        rs.getString("userMatr"),
-                        nameSplited[1],
-                        nameSplited[0],
-                        rs.getString("userMail")
-                );
+            try (var rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    var nameSplited = rs.getString("userFullName").split(" ");
+                    return new User(
+                            rs.getString("userMatr"),
+                            nameSplited[1],
+                            nameSplited[0],
+                            rs.getString("userMail")
+                    );
+                }
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
