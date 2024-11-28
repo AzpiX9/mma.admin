@@ -2,12 +2,14 @@ package org.helmo.mma.admin.domains.core;
 
 import org.helmo.mma.admin.domains.booking.EventUtils;
 import org.helmo.mma.admin.domains.exceptions.BookingException;
+import org.helmo.mma.admin.domains.exceptions.EventNotFoundException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class BookingManager {
 
@@ -15,25 +17,42 @@ public class BookingManager {
     private static final LocalTime END_TIME = LocalTime.of(17, 0);
     private static final int MAX_DAY_SEARCH = 2;
 
-    private List<LocalEvent> bookings;
+    private Map<String,LocalEvent> bookings;
 
-    public BookingManager(List<LocalEvent> bookings) {
+    public BookingManager(Map<String,LocalEvent> bookings) {
         this.bookings = bookings;
+    }
+
+    public void replaceAll(Map<String,LocalEvent> newBookings) {
+        this.bookings.clear();
+        this.bookings.putAll(newBookings);
+    }
+
+    public String getIdFromReservation(LocalEvent reservation){
+
+        return bookings.entrySet().stream()
+                .filter(id -> id.getValue().equals(reservation))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElseThrow(() -> new EventNotFoundException("Reservation "+reservation+" not found"));
     }
 
     public LocalEvent getBooking(String idRoom, LocalDateTime givenTime) {
         LocalEvent result = null;
 
-        for(var event : bookings) {
+        for(var event : bookings.values()) {
             if(event.Location().equals(idRoom) && isBetweenTime(event,givenTime)) {
                 result = event;
             }
+        }
+        if(result == null) {
+            throw new BookingException("Reservation not found");
         }
         return result;
     }
 
     public List<LocalEvent> getBookingsBy(String location, LocalDate date){
-        return bookings
+        return bookings.values()
                 .stream()
                 .filter(s -> s.Location().equals(location) && date.equals(s.DateJour()))
                 .toList();
@@ -79,7 +98,7 @@ public class BookingManager {
     private List<String> getAvailableSlotsFromDuration(String roomId,LocalDate dateGiven, String duree) {
         var dureeMinimaleMinutes = convertirEnMinutes(duree);
 
-        var byDay = bookings.stream().filter(b -> b.DateJour().equals(dateGiven) && b.Location().equals(roomId)).toList();
+        var byDay = bookings.values().stream().filter(b -> b.DateJour().equals(dateGiven) && b.Location().equals(roomId)).toList();
 
 
         List<String> momentsLibres = new ArrayList<>();
