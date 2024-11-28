@@ -41,7 +41,7 @@ class CanWriteBookedTest {
                     LocalTime.of(10, 0), LocalTime.of(11, 0), "Réunion de projet", -5);
         });
 
-        assertEquals("BookingException -> Nombre de personne ne peut pas être négatif", exception.getMessage());
+        assertEquals("Nombre de personne ne peut pas être négatif", exception.getMessage());
     }
 
     @Test

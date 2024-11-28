@@ -8,9 +8,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class CLIView implements MainView, AutoCloseable {
 
@@ -150,7 +153,7 @@ public class CLIView implements MainView, AutoCloseable {
     }
 
     @Override
-    public void displayAReservation(String bookingGiven){
+    public void displayAReservation(String bookingGiven, List<String> servicesChosen){
         var values = bookingGiven.split(",");
         var room = values[0].split("_");
         var organizer = values[4].split("_");
@@ -160,7 +163,7 @@ public class CLIView implements MainView, AutoCloseable {
         System.out.printf("%s, de %s à %s%n",values[1],values[2],values[3]); //date, crénau
         System.out.printf("Description : %s%n",values[5]);
         System.out.printf("Responsable : %s (%s, %s)\n",organizer[0]+" "+organizer[1],organizer[2],organizer[3]);
-        System.out.println("Services prévus : saucisse\n");
+        System.out.printf("Services prévus : %s \n", servicesChosen.isEmpty() ?"Rien":servicesChosen.toString());
     }
 
     /**
@@ -186,6 +189,21 @@ public class CLIView implements MainView, AutoCloseable {
             reference = reference.plusMinutes(30);
         }
         System.out.println();
+    }
+
+    @Override
+    public Set<String> askService(List<String> availableServices) {
+        int index = 0;
+        for (String service : availableServices) {
+            System.out.printf("%d. %s \n",index+1,service);
+            index++;
+        }
+        var choosen = getInput("Service choisis (séparez les choix par des virgules ',') \nLaissez vide si vous ne prenez pas de services",s -> s);
+        if (choosen == null || choosen.trim().isEmpty()) {
+            return Set.of();
+        }
+
+        return new HashSet<>(List.of(choosen.split(",")));
     }
 
     @Override

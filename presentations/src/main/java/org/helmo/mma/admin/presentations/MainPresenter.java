@@ -3,22 +3,23 @@
  */
 package org.helmo.mma.admin.presentations;
 
-import org.helmo.mma.admin.domains.booking.CalendarRepository;
 import org.helmo.mma.admin.domains.core.*;
 import org.helmo.mma.admin.domains.exceptions.BookingException;
 import org.helmo.mma.admin.domains.exceptions.EventNotFoundException;
 import org.helmo.mma.admin.domains.exceptions.UserException;
+import org.helmo.mma.admin.domains.services.BaseServices;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainPresenter implements BookingPresenter {
 
     private final MainView view;
-    private final CalendarRepository calendarRepository;
+    private final BaseServices reservationService;
     private final UserManager usersAll;
     private final RoomManager roomsAll;
     private final BookingManager eventsAll;
@@ -27,7 +28,7 @@ public class MainPresenter implements BookingPresenter {
         this.usersAll = new UserManager(aggregator.getUsersRepo().getUsers());
         this.roomsAll = new RoomManager(aggregator.getRoomsRepo().getRooms());
         this.eventsAll = new BookingManager(aggregator.getCalendarRepository().retrieveAll());
-        this.calendarRepository = aggregator.getCalendarRepository();
+        this.reservationService = aggregator.getAService();
         this.view = view;
         this.view.setPresenter(this);
     }
@@ -47,13 +48,14 @@ public class MainPresenter implements BookingPresenter {
         var formatter = DateTimeFormatter.ofPattern("H:mm");
         Booking booking = new Booking(allValues[0], allValues[1], LocalDate.parse(allValues[2]), LocalTime.parse(allValues[3],formatter), LocalTime.parse(allValues[4],formatter), allValues[5], Integer.parseInt(allValues[6]));
 
+        var services = view.askService(reservationService.getServices());
         try {
             var tempRoom = roomsAll.getARoom(allValues[0]);
             eventsAll.checkIfNotValid(booking,tempRoom);
             var bookerUser = usersAll.getUserFromMatr(booking.Matricule());
             usersAll.existsFromMatr(bookerUser.Matricule());
-
-            calendarRepository.writeTo(booking,bookerUser);
+            reservationService.addReservationAndServices(booking,bookerUser,new ArrayList<>(services));
+            eventsAll.replaceAll(reservationService.getCalendar());
             view.displayMessage("Évenement crée avec succès");
         } catch (BookingException | UserException e) {
             view.displayError(e.getMessage());
@@ -72,12 +74,13 @@ public class MainPresenter implements BookingPresenter {
             var room = roomsAll.getARoom(bookedFound.Location());
             var user = usersAll.getUserFromMatr(bookedFound.Username());
             var userString = String.format("%s_%s_%s_%s",user.Prenom(),user.Nom(),user.Matricule(),user.Email());
+            var servicesChoosen = reservationService.getServicesFromBooked(eventsAll.getIdFromReservation(bookedFound));
 
             view.displayAReservation(
                     room.Name()+"_"+room.Size() +","+bookedFound.DateJour()+","+bookedFound.Debut()
                             +","+bookedFound.Fin()+","+userString+","+bookedFound.Summary()
-            );
-        }catch (EventNotFoundException e){
+            ,servicesChoosen);
+        }catch (EventNotFoundException | BookingException e){
             view.displayError(e.getMessage());
         }
     }
