@@ -43,6 +43,7 @@ public class SQLService implements BaseServices {
             for (var booked : allBooked.keySet()){
                 lastId = booked;
             }
+
             storage.getSevicesRepository().insertReservation(lastId,servicesIDs);
             storage.commitTransaction();
         }catch (Exception e) {

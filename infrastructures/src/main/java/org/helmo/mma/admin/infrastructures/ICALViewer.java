@@ -21,7 +21,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Objet qui permet d'interagir vers un fichier ical (ou ics)
@@ -31,7 +33,7 @@ public class ICALViewer implements CalendarRepository {
 
     private Calendar calendar;
     private String pathFile;
-    private List<LocalEvent> events = new ArrayList<>();
+    private Map<String,LocalEvent> events = new HashMap<>();
 
     public ICALViewer(String path) {
         var directory = Paths.get(path);
@@ -59,7 +61,7 @@ public class ICALViewer implements CalendarRepository {
             calendar.add(event);
             var outputter = new CalendarOutputter();
             outputter.output(calendar, fos);
-            events.add(parseToBooking(event));
+            events.put(event.getUid().get().toString(),parseToBooking(event));
         } catch (IOException e) {
             throw new CalendarException("Calendrier invalide");
         }
@@ -89,7 +91,7 @@ public class ICALViewer implements CalendarRepository {
             for(var component : calendarRead.getComponents()) {
                 if(component instanceof VEvent event) {
                     var localEvent = parseToBooking(event);
-                    events.add(localEvent);
+                    events.put(component.getUid().get().toString(),localEvent);
                 }
             }
         }catch (ParserException | IOException e) {
@@ -99,44 +101,11 @@ public class ICALViewer implements CalendarRepository {
     }
 
     @Override
-    public List<LocalEvent> retrieveAll() {
+    public Map<String,LocalEvent> retrieveAll() {
         readTo();
         return events;
     }
 
-    /**
-     * @param id
-     * @param givenTime
-     * @return
-     */
-    @Override
-    public LocalEvent getBooking(String id, LocalDateTime givenTime) {
-        LocalEvent result = null;
-
-        for(var event : retrieveAll()) {
-            if(event.Location().equals(id) && isBetweenTime(event,givenTime)) {
-                result = event;
-            }
-        }
-        return result;
-    }
-
-    @Override
-    public List<LocalEvent> getBookingsBy(String location, LocalDate date) {
-        return retrieveAll()
-                .stream()
-                .filter(s -> s.Location().equals(location) && date.equals(s.DateJour()))
-                .toList();
-    }
-
-    private boolean isBetweenTime(LocalEvent event, LocalDateTime crenau) {
-
-        var eventReferenceStart = LocalDateTime.of(event.DateJour(),event.Debut());
-        var eventReferenceEnd = LocalDateTime.of(event.DateJour(),event.Fin());
-        return (crenau.equals(eventReferenceStart))
-                || (crenau.isAfter(eventReferenceStart)
-                && crenau.isBefore(eventReferenceEnd));
-    }
 
     /**
      * Analyse et transforme un objet {@code VEvent} en {@code LocalEvent}

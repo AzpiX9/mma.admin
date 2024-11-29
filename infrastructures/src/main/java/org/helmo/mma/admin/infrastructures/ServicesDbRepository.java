@@ -52,15 +52,22 @@ public class ServicesDbRepository implements SevicesRepository {
 
 
     @Override
-    public void insertReservation(String bookingId, List<String> services) {
-        if(services.isEmpty()) {
+    public void insertReservation(String bookingId, List<String> servicesId) {
+        if(servicesId == null || servicesId.isEmpty()) {
+            var sql = "INSERT INTO Reservation_Services (idReservation) VALUES (?)";
+            try (var stmt = connection.prepareStatement(sql)) {
+                stmt.setInt(1, Integer.parseInt(bookingId));
+                stmt.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
             return;
         }
-        for (var service : services) {
+        for (var serviceId : servicesId) {
             var sql = "INSERT INTO Reservation_Services (idReservation,idService) VALUES (?,?)";
             try (var stmt = connection.prepareStatement(sql)) {
                 stmt.setInt(1,Integer.parseInt(bookingId));
-                stmt.setInt(2,Integer.parseInt(service));
+                stmt.setInt(2,Integer.parseInt(serviceId));
                 stmt.executeUpdate();
             }catch (SQLException e){
                 throw new RuntimeException(e);

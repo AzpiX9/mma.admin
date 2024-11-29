@@ -40,4 +40,12 @@ public class DbTestUtils {
         memberAddQuery.add("INSERT INTO Member(userMatr, userFullName, userMail)VALUES ('J012345', 'Emma Petit', 'e.petit@helmo.be');");
         return memberAddQuery;
     }
+
+    public static List<String> insertAllReservation(){
+        var reservationAddQuery = new ArrayList<String>();
+        reservationAddQuery.add("CREATE TABLE Reservation (idReservation INTEGER PRIMARY KEY AUTOINCREMENT,salle VARCHAR(5),matricule VARCHAR(7),jourReservation VARCHAR(11),debut VARCHAR(11),fin VARCHAR(11),description VARCHAR(25),nbPersonnes INTEGER);");
+        reservationAddQuery.add("INSERT INTO Reservation (salle, matricule, jourReservation, debut, fin, description, nbPersonnes)VALUES('A101', 'MAT1234', '2024-12-01', '09:00:00', '11:00:00', 'Réunion projet', 8);");
+        reservationAddQuery.add("INSERT INTO Reservation (salle, matricule, jourReservation, debut, fin, description, nbPersonnes)VALUES('B202', 'MAT5678', '2024-12-02', '14:00:00', '15:30:00', 'Présentation client', 12);");
+        return reservationAddQuery;
+    }
 }
