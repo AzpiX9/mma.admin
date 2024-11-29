@@ -5,6 +5,7 @@ package org.helmo.mma.admin.app;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+import org.helmo.mma.admin.domains.core.BaseAggregator;
 import org.helmo.mma.admin.infrastructures.BookingAggregator;
 import org.helmo.mma.admin.domains.exceptions.DirException;
 import org.helmo.mma.admin.infrastructures.*;
@@ -23,14 +24,15 @@ public class Program {
             throw new DirException("Valeur invalide ou manquante");
         }
         var connValues = path.split(";");
-        var jdbc = String.format("jdbc:mysql://%s/Q210138?%s&%s",connValues[0],connValues[1],connValues[2]);
-        BookingAggregator aggregator = null;
-
+        var jdbcString = String.format("jdbc:mysql://%s/Q210138?%s&%s",connValues[0],connValues[1],connValues[2]);
+        BaseAggregator aggregator = null;
         try {
-            var roomRepository = new RoomDbRepository(DriverManager.getConnection(jdbc));
-            var userRepository = new UserDbRepository(DriverManager.getConnection(jdbc));
-            var calendarRepository = new CalDbRepository(DriverManager.getConnection(jdbc));
-            aggregator = new BookingAggregator(roomRepository, userRepository, calendarRepository);
+            var connection = DriverManager.getConnection(jdbcString);
+            var roomRepository = new RoomDbRepository(connection);
+            var userRepository = new UserDbRepository(connection);
+            var calendarRepository = new CalDbRepository(connection);
+            var services = new SQLService(new SQLStorage(connection));
+            aggregator = new BookingAggregator(roomRepository, userRepository, calendarRepository,services);
 
         }catch (SQLException e){
             e.printStackTrace();
