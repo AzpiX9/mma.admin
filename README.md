@@ -1,12 +1,47 @@
-# mma.admin
+# Mma.Admin
 
-## Used technologies
-![Static Badge](https://img.shields.io/badge/open--jdk-21-red?style=for-the-badge&logo=openjdk)
-![Static Badge](https://img.shields.io/badge/gradle-8.%2B-blue?style=for-the-badge&logo=gradle)
-![Static Badge](https://img.shields.io/badge/junit-green?style=for-the-badge&logo=junit5)
-![Static Badge](https://img.shields.io/badge/mockito-green?style=for-the-badge)
-
+> Ce fichier est à compléter par vos soins. Les endroits à compléter sont signalés par des **TODO**
 
 ## Description
-An app using CLI as UI. It manages to book a room on a given slot.
-From 8AM to 5PM you can use room while they're available.
+
+`Mma.Admin` est une application console pour administrer les occupations de salles de réunion. Elle permet, entre autres choses, de réserver des créneaux et de chercher des disponibilités.
+
+L'application est à déployer sur les postes des membres du personnel responsables d'administrer les salles de réunion.
+
+## Développer le projet
+
+### Prérequis
+
+Vous devez avoir le JDK 21 installé sur votre machine. Pour récupérer le projet, il est préférable d'avoir un client `git` installé. Enfin, nous vous recommandons d'utiliser un EDI comme IntelliJ ou Eclipse.
+
+- rooms.csv
+- users.csv
+- services.csv
+
+> **NOTE**
+> 
+> C:calendars\rooms.csv
+> C:calendars\users.csv
+> C:calendars\services.csv
+
+### Construction
+
+```bash
+# Clonez le dépôt
+> git clone https://git.helmo.be/students/info/q210138/mma.admin
+
+> cd [le chemin vers le dépôt local] # Accédez au répertoire du projet
+> dotnet restore # Installez les dépendances 
+> dotnet build # Construisez le projet
+> dotnet test # Exécutez les tests unitaires
+```
+
+## Utilisation
+*Avec des fichiers*
+```bash
+./gradlew run --args="--dir='src/main/resources/calendars/'"
+```
+*Avec une DB*
+```bash
+./gradlew run --args="--db='192.168.132.200:13306;user=Q210138;password=0138'"
+```

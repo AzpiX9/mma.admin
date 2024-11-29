@@ -42,6 +42,7 @@ public class ArchTest {
                 .resideInAPackage("..domains..")
                 .should().onlyDependOnClassesThat().resideInAnyPackage("java..",
                         "org.apache.logging.log4j..",
+                        "org.aspectj.lang..",
                         globalPackageName + ".domains..");
 
         domainRule.check(new ClassFileImporter().importPackages(globalPackageName + ".."));
@@ -55,6 +56,7 @@ public class ArchTest {
                 .resideInAnyPackage("java..",
                         "org.apache.logging.log4j..",
                         "net.fortuna.ical4j..",
+                        "org.mapstruct..",
                         globalPackageName + ".infrastructures..",
                         globalPackageName + ".domains..");
 
@@ -89,4 +91,3 @@ public class ArchTest {
     }
 
 }
-

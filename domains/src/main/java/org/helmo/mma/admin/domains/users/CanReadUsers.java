@@ -8,7 +8,7 @@ import java.util.Map;
 public interface CanReadUsers {
     List<User> getUsers();
 
-    User getUser(String matricule);
+    User getUser(String matricule); //TODO: déplacer
 
-    boolean exists(String matricule);
+    boolean exists(String matricule); //TODO : ditto
 }

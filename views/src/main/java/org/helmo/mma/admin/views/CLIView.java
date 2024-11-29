@@ -5,11 +5,15 @@ import org.helmo.mma.admin.presentations.MainView;
 
 import java.io.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class CLIView implements MainView, AutoCloseable {
 
@@ -149,15 +153,17 @@ public class CLIView implements MainView, AutoCloseable {
     }
 
     @Override
-    public void displayAReservation(String bookingGiven){
+    public void displayAReservation(String bookingGiven, List<String> servicesChosen){
         var values = bookingGiven.split(",");
         var room = values[0].split("_");
         var organizer = values[4].split("_");
 
+
         System.out.println("\nSalle : "+room[0]+" (Capacité. "+room[1]+")"); //nom de la salle et sa capacité
-        System.out.println(String.format("%s, de %s à %s",values[1],values[2],values[3])); //date, crénau
-        System.out.println(String.format("Description : %s",values[5]));
-        System.out.println(String.format("Responsable : %s (%s, %s)\n",organizer[0]+" "+organizer[1],organizer[2],organizer[3]));
+        System.out.printf("%s, de %s à %s%n",values[1],values[2],values[3]); //date, crénau
+        System.out.printf("Description : %s%n",values[5]);
+        System.out.printf("Responsable : %s (%s, %s)\n",organizer[0]+" "+organizer[1],organizer[2],organizer[3]);
+        System.out.printf("Services prévus : %s \n", servicesChosen.isEmpty() ?"Rien":servicesChosen.toString());
     }
 
     /**
@@ -186,12 +192,35 @@ public class CLIView implements MainView, AutoCloseable {
     }
 
     @Override
+    public Set<String> askService(List<String> availableServices) {
+        int index = 0;
+        for (String service : availableServices) {
+            System.out.printf("%d. %s \n",index+1,service);
+            index++;
+        }
+        var choosen = getInput("Service choisis (séparez les choix par des virgules ',') \nLaissez vide si vous ne prenez pas de services",s -> s);
+        if (choosen == null || choosen.trim().isEmpty()) {
+            return Set.of();
+        }
+
+        return new HashSet<>(List.of(choosen.split(",")));
+    }
+
+    @Override
     public void displayAvailable(List<String> evs) {
         System.out.printf("%n%5s | %10s | %s | %s |%n","Local", "Date","Heure de début","Heure de Fin");
         for (String ev : evs) {
-            System.out.println(ev);
+            var attributes = ev.split(",");
+            var beginTime = attributes[2].split("-")[0];
+            var endTime = attributes[2].split("-")[1];
+            System.out.printf("%-5s | %10s | %14s | %12s |\n",attributes[0],attributes[1],beginTime,endTime);
         }
         System.out.println();
+    }
+
+    @Override
+    public void displayMessage(String message) {
+        System.out.printf("%s - %s : %s\n",LocalDate.now(),LocalTime.now(),message);
     }
 
 

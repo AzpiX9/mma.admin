@@ -12,6 +12,6 @@ class UserExceptionTest {
             throw new UserException(message);
         });
 
-        assertEquals("UserException -> Utilisateur non valide", exception.getMessage());
+        assertEquals("Utilisateur non valide", exception.getMessage());
     }
 }

@@ -19,12 +19,11 @@ import java.io.*;
 import java.net.SocketException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Objet qui permet d'interagir vers un fichier ical (ou ics)
@@ -34,7 +33,7 @@ public class ICALViewer implements CalendarRepository {
 
     private Calendar calendar;
     private String pathFile;
-    private List<LocalEvent> events = new ArrayList<>();
+    private Map<String,LocalEvent> events = new HashMap<>();
 
     public ICALViewer(String path) {
         var directory = Paths.get(path);
@@ -58,11 +57,11 @@ public class ICALViewer implements CalendarRepository {
         }
 
         try(var fos = Files.newOutputStream(Paths.get(pathFile))) {
-            VEvent event = parseVEvent(bookingDto, user, bookingDto.getDebut(), bookingDto.getFin());
+            VEvent event = parseVEvent(bookingDto, user, bookingDto.Debut(), bookingDto.Fin());
             calendar.add(event);
             var outputter = new CalendarOutputter();
             outputter.output(calendar, fos);
-            events.add(parseToBooking(event));
+            events.put(event.getUid().get().toString(),parseToBooking(event));
         } catch (IOException e) {
             throw new CalendarException("Calendrier invalide");
         }
@@ -70,11 +69,11 @@ public class ICALViewer implements CalendarRepository {
     }
 
     private static VEvent parseVEvent(BookingDTO booking, User user, ZonedDateTime debut, ZonedDateTime fin) throws SocketException {
-        VEvent event = new VEvent(debut, fin, booking.getDescription());
-        Organizer attendee = new Organizer(user.Nom()+"_"+ user.Prenom()+"_"+ booking.getMatricule()+"_"+user.Email());
-        Location salle = new Location(booking.getSalle());
-        Summary summary = new Summary(booking.getDescription());
-        UidGenerator uidGenerator = new FixedUidGenerator(booking.getSalle()+"-"+booking.getMatricule());
+        VEvent event = new VEvent(debut, fin, booking.Description());
+        Organizer attendee = new Organizer(user.Nom()+"_"+ user.Prenom()+"_"+ booking.Salle()+"_"+user.Email());
+        Location salle = new Location(booking.Salle());
+        Summary summary = new Summary(booking.Description());
+        UidGenerator uidGenerator = new FixedUidGenerator(booking.Salle()+"-"+booking.Matricule());
         event.add(uidGenerator.generateUid());
         event.add(salle);
         event.add(attendee);
@@ -92,51 +91,21 @@ public class ICALViewer implements CalendarRepository {
             for(var component : calendarRead.getComponents()) {
                 if(component instanceof VEvent event) {
                     var localEvent = parseToBooking(event);
-                    events.add(localEvent);
+                    events.put(component.getUid().get().toString(),localEvent);
                 }
             }
-        } catch (IOException e) {
-            throw new CalendarException("Ce calendrier n'existe pas");
-        } catch (ParserException e) {
+        }catch (ParserException | IOException e) {
             throw new CalendarException("Les composants sont invalides");
         }
 
     }
 
     @Override
-    public List<LocalEvent> retrieveAll() {
+    public Map<String,LocalEvent> retrieveAll() {
         readTo();
         return events;
     }
 
-    /**
-     * @param id
-     * @param givenTime
-     * @return
-     */
-    @Override
-    public LocalEvent getBooking(String id, LocalTime givenTime) {
-        LocalEvent result = null;
-        for(var event : retrieveAll()) {
-            if(event.Location().equals(id) && isBetweenTime(event,givenTime)) {
-                result = event;
-            }
-        }
-        return result;
-    }
-
-    @Override
-    public List<LocalEvent> getBookingsBy(String location, LocalDate date) {
-        return retrieveAll()
-                .stream()
-                .filter(s -> s.Location().equals(location) && date.equals(s.DateJour()))
-                .toList();
-    }
-
-    private boolean isBetweenTime(LocalEvent event, LocalTime crenau) {
-        return (crenau.equals(event.Debut()) || crenau.equals(event.Fin())) ||
-                (crenau.isAfter(event.Debut()) && crenau.isBefore(event.Fin()));
-    }
 
     /**
      * Analyse et transforme un objet {@code VEvent} en {@code LocalEvent}

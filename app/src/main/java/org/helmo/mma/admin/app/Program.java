@@ -5,17 +5,16 @@ package org.helmo.mma.admin.app;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
-import org.helmo.mma.admin.domains.core.BookingAggregator;
+import org.helmo.mma.admin.domains.core.BaseAggregator;
+import org.helmo.mma.admin.infrastructures.BookingAggregator;
 import org.helmo.mma.admin.domains.exceptions.DirException;
-import org.helmo.mma.admin.infrastructures.ICALViewer;
-import org.helmo.mma.admin.infrastructures.RoomFileRepository;
-import org.helmo.mma.admin.infrastructures.UserFileRepository;
+import org.helmo.mma.admin.infrastructures.*;
 import org.helmo.mma.admin.presentations.MainPresenter;
 import org.helmo.mma.admin.views.CLIView;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 public class Program {
     private static String path = "";
@@ -24,12 +23,20 @@ public class Program {
         if(!validGivenArgs(args)){
             throw new DirException("Valeur invalide ou manquante");
         }
+        var connValues = path.split(";");
+        var jdbcString = String.format("jdbc:mysql://%s/Q210138?%s&%s",connValues[0],connValues[1],connValues[2]);
+        BaseAggregator aggregator = null;
+        try {
+            var connection = DriverManager.getConnection(jdbcString);
+            var roomRepository = new RoomDbRepository(connection);
+            var userRepository = new UserDbRepository(connection);
+            var calendarRepository = new CalDbRepository(connection);
+            var services = new SQLService(new SQLStorage(connection));
+            aggregator = new BookingAggregator(roomRepository, userRepository, calendarRepository,services);
 
-        var roomRepository = new RoomFileRepository(path+"\\rooms.csv");
-        var userRepository = new UserFileRepository(path+"\\users.csv");
-        var calendarRepository = new ICALViewer(path+"\\Event.ics");
-
-        var aggregator = new BookingAggregator(roomRepository, userRepository, calendarRepository);
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
 
         try(var view = new CLIView(System.in,System.out)){
             var mainPresenter = new MainPresenter(view,aggregator);
@@ -43,11 +50,11 @@ public class Program {
     /**
      * Vérifie si les arguments reçus sont valides
      * @param args
-     * @return true si l'argument reçu correspond à un chemin existant et que les 2 fichiers existent sinon false
+     * @return true si l'argument reçu est valide sinon false
      */
     private static boolean validGivenArgs(String[] args) {
         if(args.length < 1) {
-            System.err.println("Argument requis dir manquant ou incorrect");
+            System.err.println("Argument requis db manquant ou incorrect");
             return false;
         }
 
@@ -57,17 +64,15 @@ public class Program {
         }
 
         var opts = parsingOpts(args);
-        return opts.has("dir")
-                && Files.exists(Paths.get(path,"rooms.csv"))
-                && Files.exists(Paths.get(path,"users.csv"));
+        return opts.has("db");
     }
 
     private static OptionSet parsingOpts(String[] args) {
         OptionParser parser = new OptionParser();
-        parser.accepts("dir").withRequiredArg();
-        var arg = args[0].split("=");
+        parser.accepts("db").withRequiredArg();
+        var arg = args[0].split("=",2);
         var opts = parser.parse(arg);
-        path = opts.valueOf("dir").toString();
+        path = opts.valueOf("db").toString();
         return opts;
     }
 }
