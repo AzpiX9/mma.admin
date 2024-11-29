@@ -12,6 +12,6 @@ class RoomExceptionTest {
             throw new RoomException(message);
         });
 
-        assertEquals("RoomException -> Salle non valide", exception.getMessage());
+        assertEquals("Salle non valide", exception.getMessage());
     }
 }
