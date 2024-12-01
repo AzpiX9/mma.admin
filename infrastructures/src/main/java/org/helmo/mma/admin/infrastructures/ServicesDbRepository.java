@@ -54,13 +54,7 @@ public class ServicesDbRepository implements SevicesRepository {
     @Override
     public void insertReservation(String bookingId, List<String> servicesId) {
         if(servicesId == null || servicesId.isEmpty()) {
-            var sql = "INSERT INTO Reservation_Services (idReservation) VALUES (?)";
-            try (var stmt = connection.prepareStatement(sql)) {
-                stmt.setInt(1, Integer.parseInt(bookingId));
-                stmt.executeUpdate();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
+            insertNullServices(bookingId);
             return;
         }
         for (var serviceId : servicesId) {
@@ -74,5 +68,15 @@ public class ServicesDbRepository implements SevicesRepository {
             }
         }
 
+    }
+
+    private void insertNullServices(String bookingId) {
+        var sql = "INSERT INTO Reservation_Services (idReservation) VALUES (?)";
+        try (var stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, Integer.parseInt(bookingId));
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
