@@ -1,4 +1,4 @@
-package org.helmo.mma.admin.architecture;
+package org.helmo.architecture;
 
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import org.helmo.mma.admin.app.Program;
