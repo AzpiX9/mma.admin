@@ -1,6 +1,7 @@
 package org.helmo.mma.admin.infrastructures;
 
 import org.helmo.mma.admin.domains.booking.CalendarRepository;
+import org.helmo.mma.admin.domains.exceptions.TransactionException;
 import org.helmo.mma.admin.domains.services.BaseStorage;
 import org.helmo.mma.admin.domains.services.SevicesRepository;
 
@@ -34,7 +35,7 @@ public class SQLStorage implements BaseStorage {
         try {
             connection.setAutoCommit(false);
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new TransactionException(e.getMessage());
         }
     }
 
@@ -44,7 +45,7 @@ public class SQLStorage implements BaseStorage {
             connection.rollback();
             connection.setAutoCommit(true);
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new TransactionException(e.getMessage());
         }
     }
 
@@ -54,7 +55,7 @@ public class SQLStorage implements BaseStorage {
             connection.commit();
             connection.setAutoCommit(true);
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new TransactionException(e.getMessage());
         }
     }
 }
