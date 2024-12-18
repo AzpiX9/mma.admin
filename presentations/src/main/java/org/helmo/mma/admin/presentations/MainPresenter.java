@@ -42,7 +42,8 @@ public class MainPresenter implements BookingPresenter {
         }
     }
 
-    private static List<String> transform(List<LocalEvent> evs){
+    @Override
+    public List<String> transform(List<LocalEvent> evs){
         List<String> times = new ArrayList<>();
         for (LocalEvent event : evs) {
             var tempStr = event.Debut()+"-"+event.Fin();
