@@ -3,6 +3,9 @@ package org.helmo.mma.admin.infrastructures;
 import org.helmo.mma.admin.domains.core.Booking;
 import org.helmo.mma.admin.domains.core.LocalEvent;
 import org.helmo.mma.admin.domains.core.User;
+import org.helmo.mma.admin.domains.exceptions.CalendarException;
+import org.helmo.mma.admin.domains.exceptions.ServiceException;
+import org.helmo.mma.admin.domains.exceptions.TransactionException;
 import org.helmo.mma.admin.domains.services.BaseServices;
 
 import java.util.List;
@@ -34,7 +37,6 @@ public class SQLService implements BaseServices {
 
     @Override
     public void addReservationAndServices(Booking booking, User user, List<String> servicesIDs) {
-
         try {
             storage.beginTransaction();
             storage.getCalendarRepository().writeTo(booking,user);
@@ -46,7 +48,7 @@ public class SQLService implements BaseServices {
 
             storage.getSevicesRepository().insertReservation(lastId,servicesIDs);
             storage.commitTransaction();
-        }catch (Exception e) {
+        }catch (TransactionException | CalendarException | ServiceException e) {
             storage.rollbackTransaction();
         }
     }
