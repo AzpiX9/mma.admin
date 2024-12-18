@@ -7,6 +7,8 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import org.helmo.mma.admin.domains.core.BaseAggregator;
 import org.helmo.mma.admin.domains.exceptions.CalendarException;
+import org.helmo.mma.admin.domains.exceptions.RoomException;
+import org.helmo.mma.admin.domains.exceptions.UserException;
 import org.helmo.mma.admin.infrastructures.BookingAggregator;
 import org.helmo.mma.admin.domains.exceptions.DirException;
 import org.helmo.mma.admin.infrastructures.*;
@@ -48,7 +50,7 @@ public class Program {
             var mainPresenter = new MainPresenter(view,aggregator);
             view.run();
             connection.close();
-        } catch (IOException e) {
+        } catch (IOException | UserException e) {
             connection.close();
             throw new DirException(e.getMessage());
         }
