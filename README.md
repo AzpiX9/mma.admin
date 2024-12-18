@@ -31,9 +31,9 @@ Vous devez avoir le JDK 21 installé sur votre machine. Pour récupérer le proj
 > git clone https://git.helmo.be/students/info/q210138/mma.admin
 
 > cd [le chemin vers le dépôt local] # Accédez au répertoire du projet
-> dotnet restore # Installez les dépendances 
-> dotnet build # Construisez le projet
-> dotnet test # Exécutez les tests unitaires
+> ./gradlew restore # Installez les dépendances 
+> ./gradlew build # Construisez le projet
+> ./gradlew test # Exécutez les tests unitaires
 ```
 
 ## Utilisation
