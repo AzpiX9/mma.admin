@@ -34,9 +34,14 @@ class UserFileRepositoryTest {
         buildFile(VALID_PATH);
         var userReader = new UserFileRepository(VALID_PATH);
 
-        assertTrue(!userReader.getUsers().isEmpty());
-        assertTrue(userReader.getUsers().size() == 3);
-        assertEquals(expectedUsers,userReader.getUsers());
+        try {
+            assertTrue(!userReader.getUsers().isEmpty());
+            assertTrue(userReader.getUsers().size() == 3);
+            assertEquals(expectedUsers,userReader.getUsers());
+        } catch (UserException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     @Test

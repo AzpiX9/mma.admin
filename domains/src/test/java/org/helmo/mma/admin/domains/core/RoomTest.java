@@ -7,16 +7,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class RoomTest {
     @Test
-    public void should_return_a_valid_object() {
+    public void should_return_a_valid_object() throws RoomException {
         Room room = new Room("R123", "Conference Room", 50);
 
-        assertEquals("R123", room.Id());
-        assertEquals("Conference Room", room.Name());
-        assertEquals(50, room.Size());
+        assertEquals("R123", room.idRoom());
+        assertEquals("Conference Room", room.name());
+        assertEquals(50, room.capacity());
     }
 
     @Test
-    public void should_return_true_when_two_objects_are_equal() {
+    public void should_return_true_when_two_objects_are_equal() throws RoomException {
         Room room1 = new Room("R123", "Conference Room", 50);
         Room room2 = new Room("R123", "Conference Room", 50);
 
@@ -25,7 +25,7 @@ class RoomTest {
     }
 
     @Test
-    public void should_return_a_string_representation_with_its_values() {
+    public void should_return_a_string_representation_with_its_values() throws RoomException {
         Room room = new Room("R123", "Conference Room", 50);
 
         String expected = "Room[Id=R123, Name=Conference Room, Size=50]";

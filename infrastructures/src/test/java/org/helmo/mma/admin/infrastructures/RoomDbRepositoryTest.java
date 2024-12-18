@@ -6,8 +6,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -44,7 +42,7 @@ class RoomDbRepositoryTest {
     }
 
     @Test
-    public void shouldReturnAllRooms() {
+    public void shouldReturnAllRooms() throws RoomException {
         var allRooms = repository.getRooms();
         var expected = List.of(
                 new Room("LC1","Learning Center 1",20),
@@ -56,15 +54,15 @@ class RoomDbRepositoryTest {
     }
 
     @Test
-    public void shouldReturnRoomById() {
+    public void shouldReturnRoomById() throws RoomException {
         var idRoom = "LC1";
         var anyRoom = repository.getRoom(idRoom);
 
         var expected = new Room("LC1", "Learning Center 1", 20);
         assertEquals(expected, anyRoom);
-        assertEquals("LC1",anyRoom.Id());
-        assertEquals("Learning Center 1",anyRoom.Name());
-        assertEquals(20,anyRoom.Size());
+        assertEquals("LC1",anyRoom.idRoom());
+        assertEquals("Learning Center 1",anyRoom.name());
+        assertEquals(20,anyRoom.capacity());
     }
     @Test
     public void shouldThrowWhenByInvalidId() {

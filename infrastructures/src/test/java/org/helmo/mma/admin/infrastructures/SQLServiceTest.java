@@ -6,6 +6,7 @@ import org.helmo.mma.admin.domains.booking.CalendarRepository;
 import org.helmo.mma.admin.domains.core.Booking;
 import org.helmo.mma.admin.domains.core.LocalEvent;
 import org.helmo.mma.admin.domains.core.User;
+import org.helmo.mma.admin.domains.exceptions.TransactionException;
 import org.helmo.mma.admin.domains.services.SevicesRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -115,7 +116,7 @@ class SQLServiceTest {
         User user = new User("123", "Doe", "John", "john.doe@example.com");
         List<String> servicesIDs = List.of("1", "2", "3");
 
-        doThrow(new RuntimeException("Database error")).when(mockCalendarRepo).writeTo(booking, user);
+        doThrow(new TransactionException("Database error")).when(mockCalendarRepo).writeTo(booking, user);
 
         // Act
         assertDoesNotThrow(() -> sqlService.addReservationAndServices(booking, user, servicesIDs));

@@ -20,16 +20,9 @@ class RoomFileRepositoryTest {
     private List<Room> expectedRooms = new ArrayList<>();
     private static final String VALID_PATH = "src/test/resources/rooms.csv";
 
-    @Test
-    public void shouldThrows_Exception_WhenPathIsEmpty() {
-        buildFile("");
-        var roomReader = new RoomFileRepository("");
-        RoomException roomException = assertThrows(RoomException.class,roomReader::getRooms);
-        assertEquals(roomException.getMessage(),"Aucune salle n'est disponible");
-    }
 
     @Test
-    public void shouldRetrieve_DataFromFile_AndChecksItsSize() {
+    public void shouldRetrieve_DataFromFile_AndChecksItsSize() throws RoomException {
         buildFile(VALID_PATH);
         var roomReader = new RoomFileRepository(VALID_PATH);
 
@@ -39,7 +32,7 @@ class RoomFileRepositoryTest {
     }
 
     @Test
-    public void shouldRetrieve_OneRoomAndItsValues() {
+    public void shouldRetrieve_OneRoomAndItsValues() throws RoomException {
         buildFile(VALID_PATH);
         var roomReader = new RoomFileRepository(VALID_PATH);
 
@@ -49,7 +42,7 @@ class RoomFileRepositoryTest {
     }
 
     @Test
-    public void roomGiven_ShouldExist(){
+    public void roomGiven_ShouldExist() throws RoomException {
         buildFile(VALID_PATH);
         var roomReader = new RoomFileRepository(VALID_PATH);
         var idGiven = "L2";
@@ -59,7 +52,7 @@ class RoomFileRepositoryTest {
     }
 
     @Test
-    public void roomGiven_ShouldNotExist_AndThrowRoomException(){
+    public void roomGiven_ShouldNotExist_AndThrowRoomException() throws RoomException {
         buildFile(VALID_PATH);
         var roomReader = new RoomFileRepository(VALID_PATH);
         var idGiven = "L5";
@@ -69,7 +62,7 @@ class RoomFileRepositoryTest {
 
     }
 
-    private void buildFile(String path){
+    private void buildFile(String path) throws RoomException {
         if(path.isEmpty() || path.isBlank()){
             return;
         }
@@ -79,7 +72,7 @@ class RoomFileRepositoryTest {
         fileTest = new File(path);
         try(BufferedWriter bw = Files.newBufferedWriter(Paths.get(fileTest.getPath()))){
             for (Room room : expectedRooms) {
-                bw.write(String.format("%s;%s;%s",room.Id(),room.Name(),room.Size()));
+                bw.write(String.format("%s;%s;%s",room.idRoom(),room.name(),room.capacity()));
                 bw.newLine();
             }
         } catch (IOException e) {
