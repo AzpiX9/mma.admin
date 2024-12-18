@@ -19,7 +19,7 @@ public class UserManager {
                 .findFirst().orElse(new User("X123456","Doe","John","j.doe@helmo.be"));
     }
 
-    public void existsFromMatr(String mat) {
+    public void existsFromMatr(String mat) throws UserException {
         for (User user : users) {
             if (user.Matricule().equals(mat)) {
                 return;
