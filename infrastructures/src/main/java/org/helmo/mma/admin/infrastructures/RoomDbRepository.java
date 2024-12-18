@@ -2,6 +2,7 @@ package org.helmo.mma.admin.infrastructures;
 
 import org.helmo.mma.admin.domains.core.Room;
 import org.helmo.mma.admin.domains.exceptions.RoomException;
+import org.helmo.mma.admin.domains.exceptions.TransactionException;
 import org.helmo.mma.admin.domains.rooms.CanReadRooms;
 
 import java.sql.Connection;
@@ -33,7 +34,7 @@ public class RoomDbRepository implements CanReadRooms {
                         resultSet.getInt("roomSize")
                 ));
             }
-        } catch (SQLException e) {
+        } catch (SQLException | RoomException e) {
             e.printStackTrace();
         }
 
@@ -41,7 +42,7 @@ public class RoomDbRepository implements CanReadRooms {
     }
 
     @Override
-    public Room getRoom(String roomId) {
+    public Room getRoom(String roomId) throws RoomException {
         var query = "SELECT * FROM Rooms WHERE idRoom = ?";
 
         try (var stmt = connection.prepareStatement(query)) {
@@ -55,8 +56,8 @@ public class RoomDbRepository implements CanReadRooms {
                     );
                 }
             }
-        } catch (SQLException e) {
-            throw new RoomException("Room not found");
+        } catch (SQLException | RoomException e) {
+            throw new TransactionException("Room not found");
         }
         throw new RoomException("Room not found");
     }

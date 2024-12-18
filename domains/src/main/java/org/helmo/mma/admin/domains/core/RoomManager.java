@@ -16,10 +16,10 @@ public class RoomManager {
     }
 
     public Room getARoom(String idRoom) {
-        return rooms.stream().filter(r -> r.Id().equals(idRoom)).findFirst().orElse(null);
+        return rooms.stream().filter(r -> r.idRoom().equals(idRoom)).findFirst().orElse(null);
     }
 
     public List<Room> getRoomsByMaxSize(int maxSize) {
-        return rooms.stream().filter(r -> maxSize <= r.Size()).toList();
+        return rooms.stream().filter(r -> maxSize <= r.capacity()).toList();
     }
 }

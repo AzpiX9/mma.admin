@@ -6,6 +6,7 @@ package org.helmo.mma.admin.presentations;
 import org.helmo.mma.admin.domains.core.*;
 import org.helmo.mma.admin.domains.exceptions.BookingException;
 import org.helmo.mma.admin.domains.exceptions.EventNotFoundException;
+import org.helmo.mma.admin.domains.exceptions.PastDateException;
 import org.helmo.mma.admin.domains.exceptions.UserException;
 import org.helmo.mma.admin.domains.services.BaseServices;
 
@@ -24,7 +25,7 @@ public class MainPresenter implements BookingPresenter {
     private final RoomManager roomsAll;
     private final BookingManager eventsAll;
 
-    public MainPresenter(MainView view , BaseAggregator aggregator) {
+    public MainPresenter(MainView view , BaseAggregator aggregator) throws UserException {
         this.usersAll = new UserManager(aggregator.getUsersRepo().getUsers());
         this.roomsAll = new RoomManager(aggregator.getRoomsRepo().getRooms());
         this.eventsAll = new BookingManager(aggregator.getCalendarRepository().retrieveAll());
@@ -33,13 +34,21 @@ public class MainPresenter implements BookingPresenter {
         this.view.setPresenter(this);
     }
 
-
     @Override
     public void seeBookingRequest(LocalDate date) {
         for (var room : roomsAll.getRooms()) {
-            var eventByRooms = eventsAll.eventsToString(date,room.Id());
-            view.displayByLocalEvs(room.Id(), eventByRooms);
+            var eventByRooms = transform(eventsAll.getBookingsBy(room.idRoom(),date));
+            view.displayByLocalEvs(room.idRoom(), eventByRooms);
         }
+    }
+
+    private static List<String> transform(List<LocalEvent> evs){
+        List<String> times = new ArrayList<>();
+        for (LocalEvent event : evs) {
+            var tempStr = event.Debut()+"-"+event.Fin();
+            times.add(tempStr);
+        }
+        return times;
     }
 
     @Override
@@ -57,11 +66,9 @@ public class MainPresenter implements BookingPresenter {
             reservationService.addReservationAndServices(booking,bookerUser,new ArrayList<>(services));
             eventsAll.replaceAll(reservationService.getCalendar());
             view.displayMessage("Évenement crée avec succès");
-        } catch (BookingException | UserException e) {
+        } catch (BookingException | UserException | PastDateException e) {
             view.displayError(e.getMessage());
         }
-
-
     }
 
     @Override
@@ -77,7 +84,7 @@ public class MainPresenter implements BookingPresenter {
             var servicesChoosen = reservationService.getServicesFromBooked(eventsAll.getIdFromReservation(bookedFound));
 
             view.displayAReservation(
-                    room.Name()+"_"+room.Size() +","+bookedFound.DateJour()+","+bookedFound.Debut()
+                    room.name()+"_"+room.capacity() +","+bookedFound.DateJour()+","+bookedFound.Debut()
                             +","+bookedFound.Fin()+","+userString+","+bookedFound.Summary()
             ,servicesChoosen);
         }catch (EventNotFoundException | BookingException e){
@@ -92,6 +99,5 @@ public class MainPresenter implements BookingPresenter {
         List<String> evs = eventsAll.checkAvailableOnAll(roomResized,LocalDate.parse(values[0]),values[2]);
         view.displayAvailable(evs);
     }
-
 
 }

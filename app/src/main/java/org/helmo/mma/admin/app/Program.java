@@ -6,6 +6,9 @@ package org.helmo.mma.admin.app;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import org.helmo.mma.admin.domains.core.BaseAggregator;
+import org.helmo.mma.admin.domains.exceptions.CalendarException;
+import org.helmo.mma.admin.domains.exceptions.RoomException;
+import org.helmo.mma.admin.domains.exceptions.UserException;
 import org.helmo.mma.admin.infrastructures.BookingAggregator;
 import org.helmo.mma.admin.domains.exceptions.DirException;
 import org.helmo.mma.admin.infrastructures.*;
@@ -13,21 +16,25 @@ import org.helmo.mma.admin.presentations.MainPresenter;
 import org.helmo.mma.admin.views.CLIView;
 
 import java.io.IOException;
+import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class Program {
     private static String path = "";
 
-    public static void main(String[] args) throws DirException {
+    public static void main(String[] args) throws DirException, SQLException {
         if(!validGivenArgs(args)){
             throw new DirException("Valeur invalide ou manquante");
         }
         var connValues = path.split(";");
-        var jdbcString = String.format("jdbc:mysql://%s/Q210138?%s&%s",connValues[0],connValues[1],connValues[2]);
-        BaseAggregator aggregator = null;
+        var dbInfos = connValues[0].split("@");
+        var jdbcString = String.format("jdbc:mysql://%s/%s?%s&%s",dbInfos[1],dbInfos[0],connValues[1],connValues[2]);
+        BaseAggregator aggregator;
+        Connection connection = null;
+
         try {
-            var connection = DriverManager.getConnection(jdbcString);
+            connection = DriverManager.getConnection(jdbcString);
             var roomRepository = new RoomDbRepository(connection);
             var userRepository = new UserDbRepository(connection);
             var calendarRepository = new CalDbRepository(connection);
@@ -35,14 +42,17 @@ public class Program {
             aggregator = new BookingAggregator(roomRepository, userRepository, calendarRepository,services);
 
         }catch (SQLException e){
-            e.printStackTrace();
+            connection.close();
+            throw new CalendarException(e.getMessage());
         }
 
         try(var view = new CLIView(System.in,System.out)){
             var mainPresenter = new MainPresenter(view,aggregator);
             view.run();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            connection.close();
+        } catch (IOException | UserException e) {
+            connection.close();
+            throw new DirException(e.getMessage());
         }
 
     }

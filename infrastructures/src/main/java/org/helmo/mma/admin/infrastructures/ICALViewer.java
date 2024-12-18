@@ -30,10 +30,9 @@ import java.util.Map;
  * @author Adrien Porcu
  */
 public class ICALViewer implements CalendarRepository {
-
-    private Calendar calendar;
-    private String pathFile;
-    private Map<String,LocalEvent> events = new HashMap<>();
+    private final Calendar calendar;
+    private final String pathFile;
+    private final Map<String,LocalEvent> events = new HashMap<>();
 
     public ICALViewer(String path) {
         var directory = Paths.get(path);
@@ -51,11 +50,6 @@ public class ICALViewer implements CalendarRepository {
     @Override
     public void writeTo(Booking booking, User user) {
         var bookingDto = new BookingDTO(booking);
-
-        if(booking.JourReservation().isBefore(LocalDate.now())) {
-            return; //On sort de la méthode car on veut écrire à une date antérieur
-        }
-
         try(var fos = Files.newOutputStream(Paths.get(pathFile))) {
             VEvent event = parseVEvent(bookingDto, user, bookingDto.Debut(), bookingDto.Fin());
             calendar.add(event);
@@ -102,8 +96,12 @@ public class ICALViewer implements CalendarRepository {
 
     @Override
     public Map<String,LocalEvent> retrieveAll() {
-        readTo();
-        return events;
+        try {
+            readTo();
+            return events;
+        }catch (CalendarException c){
+            return new HashMap<>();
+        }
     }
 
 

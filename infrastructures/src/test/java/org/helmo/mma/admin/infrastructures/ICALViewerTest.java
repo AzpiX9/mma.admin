@@ -67,22 +67,6 @@ class ICALViewerTest {
         assertEquals("Team Meeting", event.Summary());
     }
 
-    @Test
-    void shouldNotWritePastBookingsToFile() {
-        // Arrange
-        ICALViewer viewer = new ICALViewer(tempFile.toString());
-        Booking booking = new Booking("Room1", "12345", LocalDate.now().minusDays(1),
-                LocalTime.of(10, 0), LocalTime.of(11, 0),
-                "Past Meeting", 5);
-        User user = new User("A123456","John", "Doe", "john.doe@example.com");
-
-        // Act
-        viewer.writeTo(booking, user);
-
-        // Assert
-        Map<String, LocalEvent> events = viewer.retrieveAll();
-        assertTrue(events.isEmpty());
-    }
 
     @Test
     void shouldReadEventsFromFile() {

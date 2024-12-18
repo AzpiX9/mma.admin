@@ -54,7 +54,8 @@ public class CLIView implements MainView, AutoCloseable {
             case 3 -> viewReservation();
             case 4 -> seeAvailable();
             case 5 -> {
-            return;
+                System.out.println("Arrêt...");
+                return;
             }
             default -> displayError("Choix invalide");
         }
@@ -199,7 +200,7 @@ public class CLIView implements MainView, AutoCloseable {
             index++;
         }
         var choosen = getInput("Service choisis (séparez les choix par des virgules ',') \nLaissez vide si vous ne prenez pas de services",s -> s);
-        if (choosen == null || choosen.trim().isEmpty()) {
+        if (choosen == null || choosen.isBlank()) {
             return Set.of();
         }
 

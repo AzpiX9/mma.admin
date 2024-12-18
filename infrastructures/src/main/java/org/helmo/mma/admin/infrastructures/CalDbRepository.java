@@ -4,6 +4,7 @@ import org.helmo.mma.admin.domains.booking.CalendarRepository;
 import org.helmo.mma.admin.domains.core.Booking;
 import org.helmo.mma.admin.domains.core.LocalEvent;
 import org.helmo.mma.admin.domains.core.User;
+import org.helmo.mma.admin.domains.exceptions.CalendarException;
 
 import java.sql.*;
 import java.sql.Date;
@@ -14,8 +15,8 @@ import java.util.*;
 
 public class CalDbRepository implements CalendarRepository {
 
-    private Connection connection;
-    private Map<String,LocalEvent> localEvents = new LinkedHashMap<>();
+    private final Connection connection;
+    private final Map<String,LocalEvent> localEvents = new LinkedHashMap<>();
 
     public CalDbRepository(Connection connection) {
         this.connection = Objects.requireNonNull(connection);
@@ -39,7 +40,7 @@ public class CalDbRepository implements CalendarRepository {
                 localEvents.put(resultSet.getString("idReservation"),localEventTemp);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new CalendarException(e.getMessage());
         }
 
     }
@@ -70,7 +71,7 @@ public class CalDbRepository implements CalendarRepository {
             localEvents.put(primaryKey,localEventTemp);
 
         }catch (SQLException e){
-            e.printStackTrace();
+            throw new CalendarException(e.getMessage());
         }
     }
 

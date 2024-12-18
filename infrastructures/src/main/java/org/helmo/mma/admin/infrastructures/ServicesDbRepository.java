@@ -1,5 +1,6 @@
 package org.helmo.mma.admin.infrastructures;
 
+import org.helmo.mma.admin.domains.exceptions.ServiceException;
 import org.helmo.mma.admin.domains.services.SevicesRepository;
 
 import java.sql.Connection;
@@ -33,20 +34,21 @@ public class ServicesDbRepository implements SevicesRepository {
     @Override
     public List<String> retriveServicesFromBooking(String bookingId) {
         var serviceBooked = new ArrayList<String>();
-        var sql = "SELECT * FROM Reservation_Services WHERE idReservation = ?";
-        try (var stmt = connection.prepareStatement(sql)){
+        try (var stmt = connection.prepareStatement("SELECT * FROM Reservation_Services WHERE idReservation = ?")){
             stmt.setString(1, bookingId);
             try(var rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    var index = Integer.parseInt(rs.getString(2));
-                    var description = retrieveAvailableServices().get(index-1);
+                    var columnIndex = rs.getString("idService");
+                    if(columnIndex == null){
+                        return serviceBooked;
+                    }
+                    var description = retrieveAvailableServices().get(Integer.parseInt(columnIndex)-1);
                     serviceBooked.add(description);
                 }
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-
         return serviceBooked;
     }
 
@@ -64,7 +66,7 @@ public class ServicesDbRepository implements SevicesRepository {
                 stmt.setInt(2,Integer.parseInt(serviceId));
                 stmt.executeUpdate();
             }catch (SQLException e){
-                throw new RuntimeException(e);
+                throw new ServiceException(e.getMessage());
             }
         }
 
@@ -76,7 +78,7 @@ public class ServicesDbRepository implements SevicesRepository {
             stmt.setInt(1, Integer.parseInt(bookingId));
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new ServiceException(e.getMessage());
         }
     }
 }

@@ -1,5 +1,6 @@
 package org.helmo.mma.admin.domains.core;
 
+import org.helmo.mma.admin.domains.exceptions.RoomException;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -8,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class RoomManagerTest {
     @Test
-    void shouldReturnAllRooms() {
+    void shouldReturnAllRooms() throws RoomException {
         // Arrange
         List<Room> rooms = List.of(
                 new Room("1", "Conference Room", 10),
@@ -22,12 +23,12 @@ class RoomManagerTest {
         // Assert
         assertNotNull(result);
         assertEquals(2, result.size());
-        assertEquals("1", result.get(0).Id());
-        assertEquals("2", result.get(1).Id());
+        assertEquals("1", result.get(0).idRoom());
+        assertEquals("2", result.get(1).idRoom());
     }
 
     @Test
-    void shouldReturnRoomById() {
+    void shouldReturnRoomById() throws RoomException {
         // Arrange
         List<Room> rooms = List.of(
                 new Room("1", "Conference Room", 10),
@@ -40,12 +41,12 @@ class RoomManagerTest {
 
         // Assert
         assertNotNull(room);
-        assertEquals("1", room.Id());
-        assertEquals("Conference Room", room.Name());
+        assertEquals("1", room.idRoom());
+        assertEquals("Conference Room", room.name());
     }
 
     @Test
-    void shouldReturnNullIfRoomIdNotFound() {
+    void shouldReturnNullIfRoomIdNotFound() throws RoomException {
         // Arrange
         List<Room> rooms = List.of(
                 new Room("1", "Conference Room", 10),
@@ -61,7 +62,7 @@ class RoomManagerTest {
     }
 
     @Test
-    void shouldReturnRoomsByMaxSize() {
+    void shouldReturnRoomsByMaxSize() throws RoomException {
         // Arrange
         List<Room> rooms = List.of(
                 new Room("1", "Large Conference Room", 15),
@@ -76,12 +77,12 @@ class RoomManagerTest {
         // Assert
         assertNotNull(result);
         assertEquals(2, result.size());
-        assertTrue(result.stream().anyMatch(r -> r.Id().equals("1")));
-        assertTrue(result.stream().anyMatch(r -> r.Id().equals("2")));
+        assertTrue(result.stream().anyMatch(r -> r.idRoom().equals("1")));
+        assertTrue(result.stream().anyMatch(r -> r.idRoom().equals("2")));
     }
 
     @Test
-    void shouldReturnEmptyListIfNoRoomMatchesMaxSize() {
+    void shouldReturnEmptyListIfNoRoomMatchesMaxSize() throws RoomException {
         // Arrange
         List<Room> rooms = List.of(
                 new Room("1", "Small Office", 5)

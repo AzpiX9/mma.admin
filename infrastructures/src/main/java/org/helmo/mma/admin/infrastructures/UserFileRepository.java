@@ -21,7 +21,7 @@ public class UserFileRepository implements CanReadUsers {
     }
 
     @Override
-    public List<User> getUsers() {
+    public List<User> getUsers() throws UserException {
         users.clear();
         try(BufferedReader br = Files.newBufferedReader(Path.of(filePath))) {
             String line;
@@ -40,23 +40,32 @@ public class UserFileRepository implements CanReadUsers {
 
     @Override
     public User getUser(String matricule) {
-        return getUsers()
-                .stream()
-                .filter(user -> user.Matricule().equals(matricule))
-                .findFirst().orElse(new User("X123456","Doe","John","j.doe@helmo.be"));
+        try {
+            return getUsers()
+                    .stream()
+                    .filter(user -> user.Matricule().equals(matricule))
+                    .findFirst().orElse(new User("X123456","Doe","John","j.doe@helmo.be"));
+        } catch (UserException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public boolean exists(String matricule) {
         boolean exists = false;
 
-        for (User user : getUsers()) {
-            if (user.Matricule().equals(matricule)) {
-                exists = true;
-                break;
+        try {
+            for (User user : getUsers()) {
+                if (user.Matricule().equals(matricule)) {
+                    exists = true;
+                    break;
+                }
             }
+        } catch (UserException e) {
+            throw new RuntimeException(e);
+        }finally {
+            return exists;
         }
 
-        return exists;
     }
 }

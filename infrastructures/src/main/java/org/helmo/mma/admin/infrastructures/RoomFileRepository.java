@@ -36,18 +36,18 @@ public class RoomFileRepository implements CanReadRooms {
                 rooms.add(new Room(values[0],values[1],Integer.parseInt(values[2])));
             }
 
-        } catch (IOException e) {
-            throw new RoomException("Aucune salle n'est disponible");
+        } catch (IOException | RoomException e) {
+            throw new RuntimeException("Aucune salle n'est disponible");
         }
 
         return rooms;
     }
 
     @Override
-    public Room getRoom(String roomId) {
+    public Room getRoom(String roomId) throws RoomException {
         return getRooms()
                 .stream()
-                .filter(room -> room.Id().equals(roomId))
+                .filter(room -> room.idRoom().equals(roomId))
                 .findFirst().orElseThrow(() -> new RoomException("Aucune salle n'est trouvé"));
     }
 

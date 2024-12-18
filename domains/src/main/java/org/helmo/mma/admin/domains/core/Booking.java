@@ -12,4 +12,12 @@ public record Booking(String IdSalle, String Matricule, LocalDate JourReservatio
             throw new BookingException("Nombre de personne ne peut pas être négatif");
         }
     }
+
+    public boolean isBeforeBegin(LocalTime timeGiven){
+        return Debut.isBefore(timeGiven);
+    }
+
+    public boolean isPastDay(LocalDate dateGiven){
+        return JourReservation.isBefore(dateGiven);
+    }
 }

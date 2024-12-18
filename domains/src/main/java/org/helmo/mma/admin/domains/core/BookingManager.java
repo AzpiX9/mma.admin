@@ -1,8 +1,8 @@
 package org.helmo.mma.admin.domains.core;
 
-import org.helmo.mma.admin.domains.booking.EventUtils;
 import org.helmo.mma.admin.domains.exceptions.BookingException;
 import org.helmo.mma.admin.domains.exceptions.EventNotFoundException;
+import org.helmo.mma.admin.domains.exceptions.PastDateException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -17,7 +17,7 @@ public class BookingManager {
     private static final LocalTime END_TIME = LocalTime.of(17, 0);
     private static final int MAX_DAY_SEARCH = 2;
 
-    private Map<String,LocalEvent> bookings;
+    private final Map<String,LocalEvent> bookings;
 
     public BookingManager(Map<String,LocalEvent> bookings) {
         this.bookings = bookings;
@@ -29,7 +29,6 @@ public class BookingManager {
     }
 
     public String getIdFromReservation(LocalEvent reservation){
-
         return bookings.entrySet().stream()
                 .filter(id -> id.getValue().equals(reservation))
                 .map(Map.Entry::getKey)
@@ -41,7 +40,7 @@ public class BookingManager {
         LocalEvent result = null;
 
         for(var event : bookings.values()) {
-            if(event.Location().equals(idRoom) && isBetweenTime(event,givenTime)) {
+            if(event.Location().equals(idRoom) && event.isOccupied(givenTime)) {
                 result = event;
             }
         }
@@ -58,38 +57,41 @@ public class BookingManager {
                 .toList();
     }
 
-    private boolean isBetweenTime(LocalEvent event, LocalDateTime crenau) {
-
-        var eventReferenceStart = LocalDateTime.of(event.DateJour(),event.Debut());
-        var eventReferenceEnd = LocalDateTime.of(event.DateJour(),event.Fin());
-        return (crenau.equals(eventReferenceStart))
-                || (crenau.isAfter(eventReferenceStart)
-                && crenau.isBefore(eventReferenceEnd));
+    public void checkIfNotValid(Booking booking, Room room) {
+        validateCollision(booking);
+        validateDate(booking);
+        validateCapacity(booking, room);
     }
 
-    public void checkIfNotValid(Booking booking, Room room) {
-        var collision = getBookingsBy(booking.IdSalle(), booking.JourReservation())
-                .stream().anyMatch(ev -> ev.Debut().isBefore(booking.Fin()) && booking.Debut().isBefore(ev.Fin()) );
-        if(collision){
+    private void validateCollision(Booking booking) {
+        boolean collision = getBookingsBy(booking.IdSalle(), booking.JourReservation())
+                .stream()
+                .anyMatch(ev -> ev.isBeforeBegin(booking.Fin()) && booking.isBeforeBegin(ev.Fin()));
+        if (collision) {
             throw new BookingException("Crénau occupé");
         }
-        if(booking.NbPersonnes() > room.Size()){
+    }
+
+    private void validateDate(Booking booking) {
+        if (booking.isPastDay(LocalDate.now())) {
+            throw new PastDateException("Date antérieure à celle actuelle");
+        }
+    }
+
+    private void validateCapacity(Booking booking, Room room) {
+        if (room.isOversize(booking.NbPersonnes())) {
             throw new BookingException("Capacité insuffisante");
         }
-
     }
 
-    public List<String> eventsToString(LocalDate dateGiven, String roomId){
-        return EventUtils.transform(getBookingsBy(roomId,dateGiven));
-    }
 
     public List<String> checkAvailableOnAll(List<Room> roomAll, LocalDate dateGiven, String duree){
         List<String> results = new ArrayList<>();
         for (int i = 0; i <= MAX_DAY_SEARCH; i++) {
             for(var room: roomAll) {
-                var r = getAvailableSlotsFromDuration(room.Id(), dateGiven.plusDays(i), duree);
+                var r = getAvailableSlotsFromDuration(room.idRoom(), dateGiven.plusDays(i), duree);
                 int index = i;
-                results.addAll(r.stream().map(a -> room.Id()+","+dateGiven.plusDays(index)+","+a).toList());
+                results.addAll(r.stream().map(a -> room.idRoom()+","+dateGiven.plusDays(index)+","+a).toList());
             }
         }
         return results.subList(0, Math.min(5, results.size()));
@@ -97,9 +99,7 @@ public class BookingManager {
 
     private List<String> getAvailableSlotsFromDuration(String roomId,LocalDate dateGiven, String duree) {
         var dureeMinimaleMinutes = convertirEnMinutes(duree);
-
         var byDay = bookings.values().stream().filter(b -> b.DateJour().equals(dateGiven) && b.Location().equals(roomId)).toList();
-
 
         List<String> momentsLibres = new ArrayList<>();
         final String[] dernierFin = {START_TIME.toString()};
