@@ -15,8 +15,8 @@ import java.util.*;
 
 public class CalDbRepository implements CalendarRepository {
 
-    private Connection connection;
-    private Map<String,LocalEvent> localEvents = new LinkedHashMap<>();
+    private final Connection connection;
+    private final Map<String,LocalEvent> localEvents = new LinkedHashMap<>();
 
     public CalDbRepository(Connection connection) {
         this.connection = Objects.requireNonNull(connection);
